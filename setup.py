@@ -164,7 +164,7 @@ descr    = __doc__.split('\n')[1:-1]; del descr[1:3]
 
 classifiers = """
 Intended Audience :: Science/Research
-License :: OSI Approved :: BSD License
+License :: OSI Approved :: GPL License
 Operating System :: MacOS
 Operating System :: POSIX
 Operating System :: Unix

@@ -2,4 +2,5 @@ build
 dist
 tmp
 __pycache__
-_pysdif.c
+pysdif/_pysdif.c
+*egg*

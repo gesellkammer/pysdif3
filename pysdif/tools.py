@@ -117,6 +117,27 @@ def add_type_definitions(infile, outfile, metadata=None):
     """
     # frametypes = frametypes_used(infile)
     # infile = SdifFile(infile)
+    insdif = as_sdiffile(infile)
+    definedFrametypes = {ftd.signature: ftd.components 
+                         for ftd in insdif.get_frame_types()}
+    frametypesUsed = frametypes_used(infile)
+    undefinedFrameSignatures = {asbytes(sig) for sig in frametypesUsed 
+                                if sig not in definedFrametypes}
+    globalFrametypes = predefined_frametypes()
+    globalMatrixtypes = predefined_matrixtypes()
+    matricesToBeAdded = []
+    for framesig in undefinedFrameSignatures:
+        components = globalFrametypes.get(framesig)
+        framesToBeAdded.append((framesig, components))
+        if not components:
+            raise KeyError("Frame {sig} is not explicitely defined and is was not"
+                           "found in the predefined types".format(sig=framesig))
+        for componentstr in components:
+            matrixsig, descr = componenstr.split()
+            columns = globalMatrixtypes.get(asbytes(matrixsig))
+            assert columns is not None
+            matricesToBeAdded.append((matrixsig, columns))
+    print(framesToBeAdded, matricesToBeAdded)
     
     
 def repair_RBEP(sdiffile, metadata=None):

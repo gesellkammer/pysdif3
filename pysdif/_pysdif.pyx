@@ -776,7 +776,12 @@ cdef class FrameR:
         NB: Only the header of the matrix will be read, to read the data
         you must call the method matrix.get_data() on the resulting Matrix
         """
-        # cdef SdifFile source = self.source
+        matrix = self.source.next_matrix()
+        if matrix is None:
+            raise StopIteration
+        return matrix
+
+        ## OLD __next__
         if self.source_this.CurrFramH == NULL:
             raise SdifOrderError("The header of the current frame has not been read") 
         cdef int matrix_status = self.source.matrix_status
@@ -884,7 +889,6 @@ cdef class FrameW:
         cdef SdifUInt4 fsz
         cdef SdifSignature matrix_sig
         cdef int dtype
-        # cdef bytes signature
         cdef c_numpy.ndarray matrix
         cdef int i
         SdifFSetCurrFrameHeader(self.sdiffile.this, self.signature, self.frame_size, 
@@ -965,8 +969,8 @@ cdef class SdifFile:
     cdef int matrix_idx
     cdef MatrixStatusE matrix_status
     cdef SdifStatusE write_status
-    cdef set _frametypes_defined
-    cdef set _matrixtypes_defined
+    cdef set _frametypes_defined   # a set of byte signatures
+    cdef set _matrixtypes_defined  # a set of byte signatures
 
     def __cinit__(self, filename, mode="r", predefined_type=None):
         sdif_init()
@@ -999,8 +1003,15 @@ cdef class SdifFile:
         logger.debug("SdifFile.__init__")
         if self.this.Mode == eReadFile:
             self.init_read()
-            if not self.get_frame_types() and self.signature in predefined_frametypes():
-                self.add_predefined_frametype(self.signature)
+            sigs = {ftd.signature for ftd in self.get_frame_types()}
+            if self.signature not in sigs:
+                if self.signature in predefined_frametypes():
+                    self.add_predefined_frametype(self.signature)
+                else:
+                    logger.error("Undefined frametype: {sig}.\n"
+                                 "You must add the frametype definition and the"
+                                 "corresponding matrix definitions before reading"
+                                 "".format(sig=self.signature))
         elif self.this.Mode == eWriteFile:
             self.init_write()
 
@@ -1081,24 +1092,18 @@ cdef class SdifFile:
     property frame_pos:
         def __get__(self): return self.this.CurrFramPos
 
-    def curr_matrix_numcols(self):
+    def curr_matrix_size(self):
         """
-        Return the numner of columns of the current matrix,
-        or -1 if no current matrix
+        Returns (num_rows, num_columns) for the current matrix,
+        without reading the data (this can be called after
+        reading the matrix header)
+
+        Raises NoMatrix if the matrix header has not been read
         """
         cdef SdifMatrixHeaderT* m = self.this.CurrMtrxH
         if m == NULL:
-            return -1
-        return m.NbCol
-
-    def curr_matrix_numrows(self):
-        """
-        Return the number of rows of the current matrix, or
-        -1 if no current matrix
-        """
-        if self.this.CurrMtrxH == NULL:
-            return -1
-        return self.this.CurrMtrxH.NbRow
+            raise NoMatrix("No current matrix")
+        return (m.NbRow, m.NbCol)
 
     def curr_matrix_datatype(self):
         """
@@ -1444,15 +1449,39 @@ cdef class SdifFile:
         return self
 
     def __next__(self):
-        if self.eof == 1:
-            raise StopIteration
-        cdef int status = self.frame_status
-        if self.frame_status == eFrameSomeDataRead or self.frame_status == eFrameHeaderRead:
-            self.frame_skip_rest()  
-        self.frame_read_header()
+        self._next_frame()
         if self.eof == 1:
             raise StopIteration
         return self.frame
+        
+    cdef inline void _next_frame(self):
+        if self.eof == 1:
+            return
+        cdef int frame_status = self.frame_status
+        if frame_status == eFrameSomeDataRead or frame_status == eFrameHeaderRead:
+            self.frame_skip_rest()  
+        self.frame_read_header()
+        if self.eof == 1:
+            return
+
+    def next_frame(self):
+        """
+        Read the next frame, returns a Frame or None if no more frames left.
+        
+        sdif = SdifFile("mysdif.sdif")
+
+        while True:
+            frame = sdif.next_frame()
+            if frame is None: break
+            print(frame.time)
+
+        This is the same as:
+
+        for frame in sdif:
+            print(frame.time)
+        """
+        self._next_frame()
+        return self.frame if self.eof == 0 else None
 
     def __enter__(self):
         return self
@@ -1471,9 +1500,7 @@ cdef class SdifFile:
         if self.eof:
             raise EOFError("Attempted to read past end of file")
         cdef int error = self._frame_skip_rest()
-        if error:
-            return False
-        return True
+        return False if error else True
         
     cdef int _frame_skip_rest(self):
         """
@@ -1506,11 +1533,11 @@ cdef class SdifFile:
         # self.matrix_idx = 0
         self.matrix_status = eMatrixNothingRead
         self._read_signature()
-        return 0        
-        
-    def matrix_get_next(self):
+        return 0      
+
+    def next_matrix(self):      
         """
-        Read the next matrix header and return a matrix with its
+        Read the next matrix header and return a Matrix with its
         data still not read. In particular, if the previous matrix
         was not read fully, its data is skipped
 
@@ -1518,13 +1545,17 @@ cdef class SdifFile:
         """
         if self.this.CurrFramH == NULL:
             raise NoFrame("no current frame")
-        if self.matrix_idx == self.this.CurrFramH.NbMatrix:
+        cdef int matrix_status = self.matrix_status
+        if matrix_status == eMatrixHeaderRead:
+            # SdifFSkipMatrixData(self.this)
+            self.matrix_skip_data()
+        elif matrix_status != eMatrixNothingRead:
+            raise SdifOrderError("Some data of the matrix has been read (%s)" % matrixstatus2str(matrix_status)) 
+        if self.matrix_idx >= self.this.CurrFramH.NbMatrix:
             return None
-        if self.matrix_status == eMatrixHeaderRead:
-            SdifFSkipMatrixData(self.this)
         self.matrix_read_header()
         return self.matrix
-    
+
     def rewind(self):
         """
         rewind the SdifFile. after this function is called, the file

@@ -33,7 +33,6 @@ import numpy
 cimport numpy as c_numpy
 from numpy cimport ndarray, npy_intp
 import logging
-logging.basicConfig()
 logger = logging.getLogger("pysdif")
 logger.setLevel(logging.INFO)
 
@@ -127,7 +126,7 @@ cdef inline int dtype_numpy2sdif(int dtype):
     elif dtype == c_numpy.NPY_UBYTE : dtype = 0x0201  
     elif dtype == c_numpy.NPY_USHORT: dtype = 0x0202      
     elif dtype == c_numpy.NPY_UINT  : dtype = 0x0204  
-    elif dtype == c_numpy.NPY_ULONg : dtype = 0x0208
+    elif dtype == c_numpy.NPY_ULONG : dtype = 0x0208
     return dtype
     
 cdef inline unsigned int str2sig (char *sig):
@@ -310,17 +309,15 @@ cdef class MatrixTypeDefinition:
     cdef public list column_names
     
     def __init__(self, signature, list column_names):
+        """
+        signature: a 4 char signature
+        column_names: a list of column names, ["Col1", "Col2", "Col3", ...]
+        """
         self.signature = asbytes(signature)
         self.column_names = [asbytes(name).strip() for name in column_names]
         
     def __repr__(self):
         return "1MTD(signature=%s, column_names=%s)" % (self.signature, self.column_names)
-    
-    def __iter__(self):
-        return iter(self.column_names)
-    
-    def __len__(self):
-        return len(self.column_names)
     
     cdef SdifMatrixTypeT *toSdifMatrixType(self):
         return MatrixType_create(self.signature, self.column_names)
@@ -355,18 +352,18 @@ cdef class Component:
     cdef readonly bytes name
     cdef readonly unsigned int num
     
-    def __init__(self, signature, name):
+    def __init__(self, signature, name, num=0):
         self.signature = asbytes(signature)
         self.name = asbytes(name)
-        self.num = 0
+        self.num = num
         
     def __repr__(self):
         return "Component(signature=%s, name=%s, num=%d)" % ( 
                self.signature, self.name, self.num)
-    
+
+
 cdef Component Component_from_SdifComponent(SdifComponentT *c):
-    cdef Component out = Component(sig2str(c.MtrxS), bytes(c.Name))
-    out.num = c.Num
+    cdef Component out = Component(sig2str(c.MtrxS), bytes(c.Name), c.Num)
     return out
     
 cdef FrameTypesTable_to_list(SdifHashTableT *t):
@@ -402,13 +399,7 @@ cdef class FrameTypeDefinition:
         
     def __repr__(self):
         return "1FTD(signature='%s', components=%s)" % (self.signature, self.components)
-        
-    def __iter__(self):
-        return iter(self.components)
-        
-    def __len__(self):
-        return len(self.components)
-    
+            
 # ----------------------------------------------------------------------
 
 SDIF_PREDEFINEDTYPES = {
@@ -555,30 +546,33 @@ cdef enum SdifStatusE:
     eSdifMatrixHeader,
     eSdifMatrixData
     
-def framestatus2str(int framestatus):
-    statusstr = [
-        "Invalid",
-        "NothingRead",
-        "HeaderRead",
-        "SomeDataRead",
-        "AllDataRead",
-        "SignatureRead"
-    ]
-    if 0 <= framestatus < len(statusstr):
-        return statusstr[framestatus]
+
+cdef tuple _framestatus2str = (
+    "Invalid",
+    "NothingRead",
+    "HeaderRead",
+    "SomeDataRead",
+    "AllDataRead",
+    "SignatureRead"
+)
+
+def framestatus2str(int status):
+    if 0 <= status < 6:
+        return _framestatus2str[status]
     return None
 
-def matrixstatus2str(int matrixstatus):
-    statusstr = [
-        "Invalid",
-        "NothingRead",
-        "HeaderRead",
-        "DataRead",
-        "DataSkipped",
-        "Offline"
-    ]
-    if 0 <= matrixstatus < len(statusstr):
-        return statusstr[matrixstatus]
+cdef tuple _matrixstatus2str = (
+    "Invalid",
+    "NothingRead",
+    "HeaderRead",
+    "DataRead",
+    "DataSkipped",
+    "Offline"
+)
+
+def matrixstatus2str(int status):
+    if 0 <= status < 6:
+        return _matrixstatus2str[status]
     return None
 
 # -----------------------------------------------------------------------------------------------
@@ -668,6 +662,14 @@ cdef class Matrix:
         if copy:
             return _array_from_matrix_data_copy(self.source_this.CurrMtrxData)
         return _array_from_matrix_data_no_copy(self.source_this.CurrMtrxData)
+
+    def column_names(self):
+        cdef bytes sig = self.signature
+        matrixtypes = {mtd.signaturesture: mtd.column_names for mtd in self.source.get_matrix_types()}
+        colnames = matrixtypes.get(sig)
+        if colnames is None:
+            raise KeyError("This matrix type ({sig}) does not seem to be defined!".format(sig=sig))
+        return colnames
         
     def skip(self):
         """
@@ -791,7 +793,8 @@ cdef class FrameR:
             raise SdifOrderError("Some data of the matrix has been read (%s)" % matrixstatus2str(matrix_status)) 
         if self.source.matrix_idx >= self.source_this.CurrFramH.NbMatrix :
             raise StopIteration
-        self.source.matrix_read_header()
+        if not self.source.matrix_read_header():
+            raise IOError("Could not read matrix header")
         return self.source.matrix
         
     def get_matrix(self, copy=True):
@@ -1298,11 +1301,9 @@ cdef class SdifFile:
         Internal
 
         Read the matrix header (signature, number of rows and columns, etc.)
-        Return the number of bytes read or 0 if no more matrices,
-
-        * Return -1 if error
+        Return the number of bytes read or 0 if no more matrices.
         """
-        if self.matrix_idx == self.this.CurrFramH.NbMatrix:
+        if self.matrix_idx >= self.this.CurrFramH.NbMatrix:
             return 0
         self.frame_status = eFrameSomeDataRead
         self.matrix_status = eMatrixHeaderRead  
@@ -1313,18 +1314,20 @@ cdef class SdifFile:
         Low level interface.
         Read the matrix header (signature, number of rows and columns, etc.)
         Return the number of bytes read or 0 if no more matrices,
+        or if eof is reached
 
         * Raises NoFrame if no current frame
-        * Raises IOError if there are no more matrices in this frame
-        * Raises EOFError if reached end-of-file
         """
+        if self.frame_status == eFrameNothingRead:
+            raise SdifOrderError("Frame header has not been read")
         if self.this.CurrFramH == NULL:
-            raise NoFrame("no current frame")        
+            raise NoFrame("no current frame")
+        if self.matrix_status == eMatrixHeaderRead:
+            raise SdifOrderError("Matrix header was already read")
         if self.eof:
-            raise EOFError("Attempted to read past end of file")
+            logger.error("Attempted to read past end of file")
+            return 0
         cdef size_t bytesread = self._read_matrix_header()
-        if bytesread == 0:
-            raise IOError("No more matrices to read")
         return bytesread
         
     def curr_frame_available(self):
@@ -1373,21 +1376,26 @@ cdef class SdifFile:
         Read the data of the current matrix as a numpy array
         
         * If the matrix-header was not read, it is read here
+          The matrix signature cam be retrieved via sdiffile.curr_matrix_signature()
         * If data was already read, it is wrapped as a numpy array
           and returned.
         * If copy is False, the array is referencing the data read and 
           is only valid as long as no new matrix is read.
-          To keep the array for longer, use copy=True or, afterwords:
+          To keep the array for longer, use copy=True or call .copy() on the array:
 
-            tmparray = sdiffile.matrix_read_data()
-            myarray = tmparray.copy() 
+          tmparray = sdiffile.matrix_read_data()
+          myarray = tmparray.copy() 
         """
         cdef int status = self.matrix_status
         cdef size_t bytesread
         if status == eMatrixDataSkipped:
             raise SdifOrderError("Can't get the data, since it was already skipped")
         if status == eMatrixNothingRead:
-            self.matrix_read_header()
+            if not self.matrix_read_header():
+                if self.matrix_idx >= self.this.CurrFramH.NbMatrix:
+                    raise SdifOrderError("Attempted to read matrix header, but there are no more matrices in this frame")
+                else:
+                    raise IOError("Could not read matrix header. ")
             status = eMatrixHeaderRead
         if status == eMatrixHeaderRead:
             bytesread = self._matrix_read_data()
@@ -1407,6 +1415,7 @@ cdef class SdifFile:
             logger.debug("tried to finalize matrix, but status is %s" % matrixstatus2str(st))
             return -1
         self.matrix_idx += 1
+        self.matrix_status = eMatrixNothingRead
         if self.matrix_idx >= self.this.CurrFramH.NbMatrix:
             self.frame_status = eFrameAllDataRead
             self._finalize_frame()
@@ -1553,7 +1562,8 @@ cdef class SdifFile:
             raise SdifOrderError("Some data of the matrix has been read (%s)" % matrixstatus2str(matrix_status)) 
         if self.matrix_idx >= self.this.CurrFramH.NbMatrix:
             return None
-        self.matrix_read_header()
+        if not self.matrix_read_header():
+            raise IOError("Could not read matrix header. ")
         return self.matrix
 
     def rewind(self):
@@ -1803,7 +1813,7 @@ cdef class SdifFile:
     def new_frame_one_matrix(self, frame_sig, SdifFloat8 time, matrix_sig,
                              c_numpy.ndarray data_array, SdifUInt4 streamID=0):
         """
-        create a frame containing only one matrix and write it
+        Create a frame containing only one matrix and write it
         This method creates the frame, creates a new matrix
         in the frame and writes it to disk, all at once
         
@@ -1868,6 +1878,8 @@ cdef class SdifFile:
     def get_frame_types(self):
         """
         Returns a list of Frame Type Definitions (1FTD)
+
+        Each FrameTypeDefinition is a namedtuple()
         """
         return FrameTypesTable_to_list(self.this.FrameTypesTable)
         
@@ -1876,7 +1888,6 @@ cdef class SdifFile:
         cdef SdifStringT *sdifstr
         sdifstr = SdifStringNew()
         SdifFAllMatrixTypeToSdifString(self.this, sdifstr)
-        # out = PyString_from_SdifString(sdifstr)
         out = bytes_from_sdifstring(sdifstr).decode("ascii")
         SdifStringFree(sdifstr)
         return out

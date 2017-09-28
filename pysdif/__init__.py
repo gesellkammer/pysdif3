@@ -12,7 +12,8 @@ from ._pysdif import (
     SdifOrderError,
     MatrixTypeDefinition,
     FrameTypeDefinition,
-    logger
+    logger,
+    sdif_init
 )
 
 from . import _pysdif

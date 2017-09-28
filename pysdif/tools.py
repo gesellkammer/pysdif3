@@ -126,6 +126,7 @@ def add_type_definitions(infile, outfile, metadata=None):
     globalFrametypes = predefined_frametypes()
     globalMatrixtypes = predefined_matrixtypes()
     matricesToBeAdded = []
+    framesToBeAdded = []
     for framesig in undefinedFrameSignatures:
         components = globalFrametypes.get(framesig)
         framesToBeAdded.append((framesig, components))
@@ -138,7 +139,13 @@ def add_type_definitions(infile, outfile, metadata=None):
             assert columns is not None
             matricesToBeAdded.append((matrixsig, columns))
     print(framesToBeAdded, matricesToBeAdded)
-    
+    outsdif = SdifFile(outfile, "w").clone_definitions(insdif)
+    for frame in insdif:
+        with outsdif.new_frame(frame.signature, frame.time) as outframe:
+            for m in frame:
+                outframe.add_matrix(m.signature, m.get_data(copy=True))
+    outsdif.close()
+
     
 def repair_RBEP(sdiffile, metadata=None):
     """

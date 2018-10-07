@@ -10,7 +10,7 @@
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
-* Foobar is distributed in the hope that it will be useful,
+* pysdif is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
@@ -94,7 +94,7 @@ versionstr = "%d.%d.%d" % get_version()
 
 classifiers = """
 Intended Audience :: Science/Research
-License :: OSI Approved :: GPL License
+License :: OSI Approved :: GNU General Public License v3 (GPLv3)
 Operating System :: MacOS
 Operating System :: POSIX
 Operating System :: Unix
@@ -128,7 +128,7 @@ See release notes and changes at http://github.com/gesellkammer/pysdif
 
 
 setup(
-    name = "pysdif",
+    name = "pysdif3",
     cmdclass = cmdclass,
     ext_modules = [pysdif_ext],
     install_requires = [

@@ -22,20 +22,6 @@
 
 import sys
 from setuptools import setup, Extension
-try:
-    from Cython.Distutils import build_ext
-except ImportError:
-    setup(install_requires=[
-        'cython>=0.19',
-        'numpy>1.5'
-    ])
-    try:
-        from Cython.Distutils import build_ext
-    except ImportError:
-        print("Cython is necessary to build this package")
-        print("An attempt to install Cython just failed")
-        sys.exit()
-import numpy as np
 
 
 def get_version():
@@ -46,28 +32,22 @@ def get_version():
     version = d.get('__version__', (0, 0, 0))
     return version
 
-cmdclass     = {}
+
+class numpy_include(str):
+
+    def __str__(self):
+        import numpy
+        return numpy.get_include()
+
 library_dirs = []
-
-
-def numpy_include():
-    try:
-        inc = np.get_include()
-    except AttributeError:
-        inc = np.get_numpy_include()
-    return inc 
-
-
-include_dirs = [
-    'pysdif',
-    numpy_include()
-]
 
 compile_args = [
     '-fno-strict-aliasing',
     '-Werror-implicit-function-declaration',
     '-Wfatal-errors'
 ]
+
+include_dirs = []
 
 if sys.platform == "windows":
     compile_args += ["-march=i686"]
@@ -77,18 +57,6 @@ elif sys.platform == "linux":
 elif sys.platform == "darwin":
     include_dirs.append("/usr/local/include/")
     library_dirs.append("/usr/local/lib")
-
-pysdif_ext = Extension(
-    'pysdif._pysdif',
-    sources      = ['pysdif/_pysdif.pyx', 'pysdif/pysdif.pxd'],
-    include_dirs = include_dirs,
-    libraries    = ['sdif'],
-    library_dirs = library_dirs,
-    extra_compile_args = compile_args,
-    extra_link_args = compile_args,
-)
-    
-cmdclass['build_ext'] = build_ext
 
 versionstr = "%d.%d.%d" % get_version()
 
@@ -129,21 +97,32 @@ See release notes and changes at http://github.com/gesellkammer/pysdif
 
 setup(
     name = "pysdif3",
-    cmdclass = cmdclass,
-    ext_modules = [pysdif_ext],
-    install_requires = [
+    python_requires=">=3.6",
+    ext_modules = [
+        Extension(
+            'pysdif._pysdif',
+            sources = ['pysdif/_pysdif.pyx', 'pysdif/pysdif.pxd'],
+            include_dirs = include_dirs + ['pysdif', numpy_include()],
+            libraries = ['sdif'],
+            library_dirs = library_dirs,
+            extra_compile_args = compile_args,
+            extra_link_args = compile_args,
+        )
+    ],
+    setup_requires = [
         'numpy>=1.8',
         'cython>=0.20'
+    ],
+    install_requires = [
+        'numpy>=1.8',
     ],
     packages = ['pysdif'],
     package_dir  = {'pysdif': 'pysdif'},
     package_data = {'pysdif': ['data/*']},
-
     version  = versionstr,
-    url           = 'https://github.com/gesellkammer/pysdif',
-    download_url = 'https://github.com/gesellkammer/pysdif',
-    author        = 'Eduardo Moguillansky',
-    author_email  = 'eduardo.moguillansy@gmail.com',
+    url = 'https://github.com/gesellkammer/pysdif',
+    author = 'Eduardo Moguillansky',
+    author_email = 'eduardo.moguillansy@gmail.com',
     long_description = long_description,
     description = "Wrapper for the SDIF library for audio analysis",
     classifiers = [c for c in classifiers.split('\n') if c]

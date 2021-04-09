@@ -7,7 +7,6 @@
 
 This is a python wrapper to IRCAM's sdif library to read and write SDIF files.
 It consists of a core written in Cython and some other utilities written in Python.
-It targets python >= 3.5
 
 ## Build
 

@@ -1,0 +1,296 @@
+% $Id: tutorial-doc.tex,v 3.4 2001-10-26 14:46:01 schwarz Exp $
+%
+% $Log: not supported by cvs2svn $
+
+\documentclass{article}
+
+\usepackage{hevea}
+\usepackage{tabularx}
+\usepackage{color}
+
+
+%
+% commands
+%
+
+\ifhevea
+
+% web only
+\renewcommand{\url}     [1]   {\ahrefurl{#1}}
+\newcommand{\link}      [2]   {\ahref{#1}{#2}}
+\newcommand{\sel}       [1]   {\textcolor{red}{\code{\textbf{#1}}}}
+\newcommand{\Section}   [1]   {\\\\\\\label{#1}\section#1}
+\newcommand{\tocitem}   [2]   {\item\ahrefloc{sec:#1}{#2}}
+\newcommand{\index}     [1]   {}  % hevea doesn't know \index
+
+\else
+
+% latex only
+\let\realurl=\url
+\renewcommand{\url}     [1]   {{\small\realurl{#1}}}
+\newcommand{\link}      [2]   {#2}
+
+\fi
+
+\renewcommand{\code}         [1] {{\upshape\texttt{#1}}}
+\newcommand{\selectspecurl}      {http://www.ircam.fr/anasyn/sdif/extern/utilities-doc.html#selectspec} 
+\newcommand{\selectspeclink} [1] {\link{\selectspecurl}{#1}} 
+\newcommand{\commentf}       [1] {\textcolor{blue}{\texttt{\textit{#1}}}}
+\newcommand{\commentp}       [1] {%
+	\@print{<table cellspacing=0 cellpadding=0><tr valign=top><td>}%
+	\commentf{/* }\@print{<td>}\commentf{#1~*/}\@print{</table>}}
+%\newcommand{\commentp}       [1] {\begin{tabular}{lp{}}
+%				  /* & \textit{#1}~*/\\
+%				  \end{tabular}}
+\newcommand{\commentl}       [1] {\commentf{/* #1 */}}
+\renewcommand{\@bodyargs}{TEXT=black BGCOLOR=white}
+
+
+%
+% title
+%
+
+\title  {IRCAM SDIF Library Tutorial}
+\author {\link{mailto:schwarz@ircam.fr}{Diemo Schwarz}}
+\date   {\today}
+
+
+\begin{document}
+\maketitle
+
+
+
+\Section {Introduction}
+
+This tutorial describes the standard way to read and write an SDIF file using
+the \link{http://www.ircam.fr/sdif}{Ircam SDIF Library}.  Only rudimentary
+error checking is done.  However, the reading program uses the SDIF selection
+(see this \link{http://www.ircam.fr/anasyn/schwarz/publications/icmc2000/#sec:selection}{ICMC article}) to show you how easy it is to incorporate powerful selection capabilities into your programs.
+
+To use the sdif library, include the definitions with
+
+\begin{alltt}
+#include <sdif.h>
+\end{alltt}
+
+and link with the SDIF library using \code{-lsdif}.
+
+SDIF signatures are the 4 characters that identify a frame or matrix type.  To
+create and read them, use:
+
+\begin{alltt}
+SdifSignature mysig  = SdifSignatureConst ('1FQ0');
+char*         sigstr = SdifSignatureToString (mysig);
+\end{alltt}
+
+A little note on the \key{naming convention} of SDIF funtions: All functions
+starting with \code{SdifF}... work on an open SDIF file.  They all take an
+\code{SdifFileT *} as first argument.
+
+
+
+
+
+\Section {Initialisation}
+
+The library is initialised by calling
+
+\begin{alltt}
+SdifGenInit ("");
+\end{alltt}
+
+giving an optional \code{.styp} file with description of type definitions.  An
+empty string \code{""} means take the file at the standard place, or use the
+file given by the environment variable \code{SDIFTYPES}, if it exists.
+
+To deinitialise and clean up, call:
+
+\begin{alltt}
+SdifGenKill ();
+\end{alltt}
+
+
+
+
+
+\Section {Reading}
+
+%\subsection {Making Your Own Loop}
+
+\begin{alltt}
+
+size_t  bytesread = 0;
+int	eof       = 0;	\commentl{End-of-file flag}
+
+\commentp{Open file for reading and parse selection.  (See
+	  \selectspeclink{Utilities} for selection syntax.)}
+SdifFileT *file = SdifFOpen ("filename.sdif::\selectspeclink{\var{selection}}", eReadFile);
+SdifFReadGeneralHeader  (file); \commentl{Read file header}
+SdifFReadAllASCIIChunks (file); \commentl{Read ASCII header info, such as name-value tables}
+
+\commentp{Read all frames matching the file selection.}  
+while (!eof  &&  SdifFLastError (file) == NULL)
+\{
+    bytesread += SdifFReadFrameHeader(file);
+
+    \commentl{search for a frame we're interested in}
+    while (!SdifFCurrFrameIsSelected (file)
+	   ||  SdifFCurrSignature (file) != mysig)
+    \{
+        SdifFSkipFrameData (file);
+        if ((eof = SdifFGetSignature(file, &bytesread) == eEof))
+            break;                                         \commentl{eof}
+        bytesread += SdifFReadFrameHeader(file);
+    \}
+
+    if (!eof)
+    \{    \commentl{Access frame header information}
+    	SdifFloat8      time     = SdifFCurrTime (file);
+    	SdifSignature   sig      = SdifFCurrFrameSignature (file);
+    	SdifUInt4       streamid = SdifFCurrID (file);
+    	SdifUInt4       nmatrix  = SdifFCurrNbMatrix (file);
+    	int		m;
+    
+    	\commentl{Read all matrices in this frame matching the selection.}
+    	for (m = 0; m < nmatrix; m++)
+    	\{
+    	    bytesread += SdifFReadMatrixHeader (file);
+    
+    	    if (SdifFCurrMatrixIsSelected (file))
+    	    \{    \commentl{Access matrix header information}
+ 		SdifSignature	sig   = SdifFCurrMatrixSignature (file);
+		SdifInt4	nrows = SdifFCurrNbRow (file);
+		SdifInt4	ncols = SdifFCurrNbCol (file);
+		SdifDataTypeET	type  = SdifFCurrDataType (file);
+    
+		int		row, col;
+		SdifFloat8	value;
+    		
+    		for (row = 0; row < nrows; row++)
+    		\{
+		    bytesread += SdifFReadOneRow (file);
+    
+    		    for (col = 1; col <= ncols; col++)
+    		    \{
+			\commentl{Access value by value...}
+    			value = SdifFCurrOneRowCol (file, col);
+    
+			\commentl{ Do something with the data...}
+		    \}
+    		\}
+    	    \}
+    	    else
+	    \{
+    		bytesread += SdifFSkipMatrixData(file);
+	    \}
+
+	    \commentl{Read matrix-padding to assure 8 byte alignment.  
+		      (Frames are then automatically aligned.)}
+	    bytesread += SdifFReadPadding(file, SdifFPaddingCalculate(file->Stream, bytesread));
+    	\} 
+
+        \commentl{Read next signature}
+    	eof = SdifFGetSignature(file, &bytesread) == eEof;
+    \}
+\}
+
+if (SdifFLastError (file))   \commentl{Check for errors}
+\{
+    exit (1);
+\}
+
+SdifFClose (file);
+\end{alltt}
+
+
+
+
+\Section {Writing}
+
+\begin{alltt}
+SdifFileT *file = SdifFOpen("filename.sdif", eWriteFile);  \commentl{Open file for writing}
+\commentl{Here, you could add some text data to the name-value tables}
+SdifFWriteGeneralHeader  (file);    \commentl{Write file header information}
+SdifFWriteAllASCIIChunks (file);    \commentl{Write ASCII header information}
+
+\commentp{Writing can be done in different flavours:  For the common case of a frame with one matrix, use:}
+SdifFWriteFrameAndOneMatrix (file, mysig, mystream, mytime,             \commentl{frame header}
+				   mysig, eFloat4, nrows, ncols, data); \commentl{matrix}
+
+\commentp{If you have one or more matrices ready in row-major order, use:}
+SdifUInt4 framesize = SdifSizeOfFrameHeader () 
+                    + SdifSizeOfMatrix (eFloat4, nrows, ncols); \commentl{as many as you like...}
+SdifFSetCurrFrameHeader (file, mysig, framesize, 1, mystream, mytime);
+SdifFWriteFrameHeader (file);
+SdifFWriteMatrix (file, mysig, eFloat4, nrows, ncols, data);
+
+\commentp{If you want to calculate your data on-the-fly, you can write it the nitty-gritty way:}
+SdifUInt4 SizeFrameW = 0;
+
+SdifFSetCurrFrameHeader (file, mysig, _SdifUnknownSize, nmatrix, mystream, mytime);
+SizeFrameW += SdifFWriteFrameHeader (file);
+
+\commentl{Write matrix header}
+SdifFSetCurrMatrixHeader (file, mysig, eFloat4, nrows, ncols);
+SizeFrameW += SdifFWriteMatrixHeader (file);
+
+\commentl{Write matrix data}
+for (row = 0; row < nrows; row++)
+\{
+    for (col = 1; col <= ncols; col++)
+    \{
+        SdifFSetCurrOneRowCol (file, col, value);
+    \}
+    SizeFrameW += SdifFWriteOneRow (file);
+\}
+\commentl{Write matrix padding}
+SizeFrameW += SdifFWritePadding (file, SdifFPaddingCalculate (file->Stream, SizeFrameW));
+
+SdifUpdateChunkSize (file, SizeFrameW - 8);  \commentl{Set frame size}
+
+SdifFClose (file);
+\end{alltt}
+
+
+
+
+\Section{Goodies}
+
+Some functions to make life with SDIF even easier:
+
+\begin{alltt}
+\commentp{Check if the file exists and is a good SDIF file}
+if (SdifCheckFileFormat ("filename.sdif"))
+    /* ok */;
+
+\commentp{Check if file is good, exists, and contains certain frame types}
+SdifSignature wanted [] = \{ SdifSignatureConst('1TRC'), 
+			    SdifSignatureConst('1HRM'), 
+			    eEmptySignature \commentl{end marker} 
+			  \},
+	      firstfound;
+int           firstindex;
+
+\commentl{This returns the signature of the first wanted frame found}
+firstfound = SdifCheckFileFramesTab ("filename.sdif", wanted);
+
+printf ("First sig found is: %s\backslash{n}", 
+	firstfound  ?  SdifSignatureToString(firstfound)  
+		    :  "none of interest");
+
+\commentl{Alternatively, you can get the index of the first frame found}
+firstindex = SdifCheckFileFramesIndex ("filename.sdif", wanted);
+
+printf ("First sig found is: %s\backslash{n}", 
+	firstindex >= 0  ?  SdifSignatureToString(wanted [firstindex])  
+		         :  "none of interest");
+\end{alltt}
+
+N.B.:  All of the above functions require a real file, and do not work with standard input.
+
+\end{document}
+% --> cocoon anchor
+
+
+
+

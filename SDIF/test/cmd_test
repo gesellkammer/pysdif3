@@ -1,0 +1,15 @@
+#!/bin/csh 
+
+set System = `uname -s`
+set SysVers = `uname -r`
+
+#echo "$System \t $SysVers"
+
+set Prog_Dir = ./bin/{$System}_{$SysVers}
+set Files_Txt_Dir = ../files/txt
+set Files_Sdif_Dir = ../files/sdif
+
+set namein = {$Files_Txt_Dir}/{$1}.sdif.txt
+set nameout = {$Files_Sdif_Dir}/{$1}.sdif
+
+{$Prog_Dir}/test

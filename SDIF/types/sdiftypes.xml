@@ -1,0 +1,1388 @@
+<!-- emacs mode: -*-xml-*- -->
+
+<sdif-tdl version="0.4beta"> 
+
+<types-version>Ircam_1.7</types-version>
+
+<types-revision>
+  $Id: sdiftypes.xml,v 1.16 2002-09-20 14:31:14 schwarz Exp $
+</types-revision>
+
+
+<!-- CVS LOG - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ $Log: not supported by cvs2svn $
+ Revision 1.15  2002/09/20 14:28:46  schwarz
+ Changed definition of matrix data type:
+ use <datatype>...</datatype> tag around!
+
+ Revision 1.14  2002/08/28 17:27:53  schwarz
+ Added templates, separator lines for sections.
+ New types: segmentation markers (experimental), midi.
+
+ Revision 1.13  2002/08/08 15:08:52  schwarz
+ sample
+
+ Revision 1.12  2001/06/08 18:48:11  schwarz
+ CHANGE OF DEFINITION OF A SPECTRAL ENVELOPE!
+
+ A spectral envelope in sampled representation used to be defined by
+ numenv bins with bin frequencies from fstep (= maxfreq / numenv) to
+ maxfreq.  To be more consistent with other spectral descriptions,
+ e.g. FFT results, the bin frequencies are now starting at 0 Hertz.
+
+ Revision 1.11  2001/05/02 15:28:48  schwarz
+ Reconstituted compatibility by reintroducing Ircam's 1RES matrix def
+ and actually creating the 2RES "official" definition.  To be cleared up.
+
+ Revision 1.10  2001/04/20 16:58:38  schwarz
+ Temporarily removed IDIS matrix reference, because no-one remembers
+ how it is defined and its not used anyway.
+
+ Revision 1.9  2001/04/18 16:24:52  schwarz
+ Generate ../sdif/sdiftypes.h with xmltostyp.pl to include standard types
+ into the code as #define'd string SDIFTYPES_STRING
+ (==> no need to install SdifTypes.STYP)
+ Generate ../sdif/SdifTypes.STYP directly.
+ Changed usage of xmltostyp.pl, added help.
+
+ Revision 1.8  2000/09/27 10:12:47  schwarz
+ Ideas for datatype, datarange.
+
+ Revision 1.7  2000/08/22  18:01:06  peeters
+ Added definition for 1MRK, 1PEM, 1VUV, 1VUF, 1VUN
+
+ Revision 1.6  2000/08/22  16:07:50  schwarz
+ More docs of sdif-tdl XML format.
+ Supporting Types description.
+
+ Revision 1.5  2000/08/22  14:32:38  rod
+ Rod 22 Aug 2000 : added specifications to many types
+
+ Revision 1.4  2000/08/16  16:10:40  schwarz
+ Description of AR coefficient rows.
+
+ Revision 1.3  2000/08/09  14:43:49  schwarz
+ Put all SDIF types into XML format.  Lots of descriptions still missing.
+ Full "about this document" info.
+
+ Revision 1.2  2000/08/08  15:59:08  schwarz
+ SDIF-TDL version 0.2 (no matrix:role attribute, types-version, types-revision.
+ Generation details in STYP 1NVT / HTML footer.
+
+ Revision 1.1  2000/07/27  13:32:02  schwarz
+ First preliminary trial test version of SDIF types definition using XML:
+ xmltostyp.pl generates library-types file sdiftypes.styp from sdiftypes.xml,
+ xmltohtml.pl generates documentation file sdiftypes.html from sdiftypes.xml.
+
+ END OF CHANGE-LOG
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<!-- READ THIS FIRST - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Some points to note about the SDIF types XML format:
+
+- define a matrix before the frame which uses it
+
+- Francophoniephiles: use <description language="fr">...</description>
+  to add french text.
+
+- Find the right section to put your type in, or create a new,
+  meaningful one.  You can add section-level description text and give
+  it a custom title using, e.g. 
+  <description title="Note">blablabla</description>
+
+- Use these HTML-like tags for description text: 
+	<emph>emphasized (italics)</emph>, 
+	<strong>strong emphasis (bold)</strong>,
+	<code>source code extracts (one word)</code>, 
+	<var>variables</var>, 
+	<sub>subscript</sub>, 
+	<sup>superscript</sup>,
+	<pre>preformetted source code, etc. (multiline)</pre>
+	<a href="link target" [target="_new|_parent|..."]>hyperlink text</a>,
+	<br/> newline	(note the closing '/'!)
+	<p/>  paragraph	(note the closing '/'!)
+
+- Use <matrixref signature="1ABC">the 1ABC matrix</matrixref>, or
+  <frameref>, in description text to insert a hyperlink to the
+  matrix/frame definition.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<!-- TYPE DEFINITION TEMPLATES - - - - - - - - - - - - - - - - - - - - - - - - 
+
+<matrix signature="" name="" status="private, experimental, proposed, standard, obsolete">
+  <description>
+	matrix type description
+  </description>
+
+  <datatype>
+    <float/><double/><int/><int16/><uint16/><int32/><uint32/><text/>
+  </datatype>
+
+  <rows>rows description</rows>
+  <column name="">column description</column>
+</matrix>
+
+
+<frame signature="" name="" status="private, experimental, proposed, standard, obsolete">
+  <description>
+	frame type description
+  </description>
+
+  <matrixref signature="" occurrence="optional, required">
+	name of matrix in frame
+  </matrixref>
+</frame>
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<!-- SOME OPEN QUESTIONS ABOUT THE SDIF-TDL XML-FORMAT - - - - - - - - - - - - 
+
+- Matrix data types are declared like this:
+
+  <datatype>
+    <float/><double/><int/><int16/><uint16/><int32/><uint32/><text/>
+  </datatype>
+
+  The datatype tag contains the list of allowed datatypes for this matrix.
+  <int/> stands for any of the int types.
+
+  alternative data type definitions: 
+
+  <float/><double/><int16/><uint16/><int32/><uint32/><text/>
+
+  <type>float</type>   <type>double</type>   <type>float double</type>
+  <data type="float"/> <data type="double"/> <data type="float" type="double"/>
+					     <data type="float|double"/>
+  <datatype><integer size="2"/> or <integer width="16"/>
+         or <int16/><uint16/><int32/><uint32/>
+            <real size="4"/> or <real width="32"/>
+	 or <float/> <double/>
+	    <text/> <rawbyte/>
+  </datatype>
+
+- Content?:
+
+  <datarange min=".." max=".."/>
+
+
+- Sectioning:
+
+  we use
+
+  <section>Spectral Envelopes</section>
+    <matrix>...</matrix>
+    <frame>...</frame>
+
+  and not
+
+  <section title="Spectral Envelopes">
+    <matrix>...</matrix>
+    <frame>...</frame>
+  </section> 
+  because types don't need to be in sections!
+
+  On the other hand, this slightly defies the tree-structure idea of xml.
+
+
+- Status of frame and matrix types:
+
+  Shall we restrict this to certain keywords?  Which?  I use, for the moment:
+  private, experimental, proposed, standard, obsolete
+  
+
+- Writing mathematical formulae:
+
+  Can we plug something like MathML into sdif-tdl?
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Supporting Types</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="1NVT" name="NameValueTable" status="standard">
+  <description>
+    Name-value table: list of key (name) and associated value.  See
+    the <frameref signature="1NVT">1NVT frame</frameref>.  The format
+    is a list of: name\tvalue\n.  Name must only contain
+    alphanumerical characters, value must not contain \n or the zero byte.
+  </description>
+  <text/>
+  <rows>Characters</rows>
+  <column name="NVTText"></column>
+</matrix>
+
+<matrix signature="1TYP" name="TypeDefinitions" status="standard">
+  <description>
+    Description type definition.  See the <frameref
+    signature="1TYP">1TYP frame</frameref>.
+  </description>
+  <text/>
+  <rows>Characters</rows>
+  <column name="TYPText"></column>
+</matrix>
+
+<matrix signature="1IDS" name="StreamInfo" status="standard">
+  <description>
+    Stream routing and synthesizer patch information.  See the <frameref
+    signature="1IDS">1IDS frame</frameref>.
+  </description>
+  <text/>
+  <rows>Characters</rows>
+  <column name="IDSText"></column>
+</matrix>
+
+
+<frame signature="1NVT" name="NameValueTable" status="standard">
+  <description>
+    The 1NVT name-value table frame stores ASCII or numerical header
+    information (value) for arbitrary keys (name).  This is the place
+    to store the name and version of the program that wrote the file,
+    the date, the host, the user, the command-line arguments, and
+    other parameters.
+  </description>
+  <matrixref signature="1NVT" occurrence="required"></matrixref>
+</frame>
+
+<frame signature="1TYP" name="TypeDefinitions" status="standard">
+  <description>
+    Definition of SDIF description types (frame and matrix types)
+    local to the file.  The definitions of any non-standard types used
+    on generation of the SDIF file are copied to this frame, so that
+    the file will work at other sites that don't know about the
+    non-standard types.
+  </description>
+  <matrixref signature="1TYP" occurrence="required"></matrixref>
+</frame>
+
+<frame signature="1IDS" name="StreamInfo" status="standard">
+  <description>
+    Stream routing and synthesizer patch information for the
+    <a href="http://www.ircam.fr/produits/logiciels/log-forum/chant-e.html" 
+     target="_new">Chant library</a>, used e.g. in 
+    <a href="http://www.ircam.fr/produits/logiciels/log-forum/diphone-e.html"
+     target="_new">Diphone</a>.
+  </description>
+  <matrixref signature="1IDS" occurrence="required"></matrixref>
+</frame>
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Types used in different contexts</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="1GAI" name="Gain">
+  <description>
+      A linear gain factor for the data to which it is attached,
+      such as an autoregressive filter, i.e. 
+      <matrixref signature="1ARA">1ARA</matrixref>
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows   num="1"/>
+  <column name="Gain">linear gain value</column>
+</matrix>
+
+<frame signature="1GAI" name="Gain">
+  <description> 
+     See matrix <matrixref signature="1GAI" occurrence="required">
+     Gain</matrixref>
+  </description>
+  <matrixref signature="1GAI" occurrence="required">Gain</matrixref>
+</frame>
+
+
+<matrix signature="IWIN" name="WindowInfo">
+  <description>
+      Window information matrix.
+      Windows used e.g. in spectral estimation. 
+      A portion of the signal is selected by
+      multiplying it by the window function.
+      The WindowIdentifier is a (usually positive)
+      number which identifies the type of window as specified in
+      <code><a href="http://cnmat.CNMAT.Berkeley.EDU/SDIF/proposals/window-enumeration.text">window-enumeration.text</a></code>
+      <br/> 
+      The negative number -1 means a not-yet specified window
+      which then must appear in sampled values explictly in
+      a following <matrixref signature="1WIN"> 1WIN </matrixref>
+      matrix. Then the WindowSize should be the same as the
+      number of rows in the following 
+      <matrixref signature="1WIN"> 1WIN </matrixref>.
+ </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows   num="1"/>
+  <column name="WindowIdentifier">
+     A number which identifies the type of window.
+  </column>
+  <column name="WindowSize"> in samples</column>
+</matrix>
+
+
+<matrix signature="1WIN" name="Window">
+  <description>
+      Windows used e.g. in spectral estimation. 
+      A portion of the signal is selected by
+      multiplying it by the window function the 
+      samples of which appear in the matrix.
+      It has to be preceeded by a
+      <matrixref signature="IWIN"> IWIN </matrixref> matrix.
+ </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>
+    As many as samples describing the window function.
+  </rows>
+  <column name="Samples">Samples </column>
+</matrix>
+
+
+<frame signature="1WIN" name="Window">
+  <description>
+     See matrix <matrixref signature="IWIN">
+     IWIN</matrixref>
+  </description>
+  <matrixref signature="IWIN" occurrence="required"></matrixref>
+  <matrixref signature="1WIN" occurrence="optional"></matrixref>
+</frame>
+
+<matrix signature="1CHA" name="Channels">
+  <description>
+    Gain factors to distribute signals among several channels
+    with corresponding gains (simple panning).
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows> as many as signals to pan</rows>
+  <column name="Channel1" occurrence="required"></column>
+  <column name="Channel2" occurrence="optional">
+  and so on optionally...</column>
+</matrix>
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Fundamental Frequency Estimation</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="1FQ0" name="FundamentalFrequencyEstimate">
+  <description>
+     The fundamental frequency <i>f0</i> of a signal is the inverse
+     of the most likely (according to the estimation method used)
+     periodicity at which the signal locally (on a short window)
+     repeats nearly identical to itself.
+     For synthesis, the synthesized signal is supposed
+     to locally have the given periodicity (fundamental frequency)
+     at the instant of the frame time.
+     Even though f0 is often
+     very close to the pitch at which the sound is perceived,
+     this is not a psychoacoustic notion but a statistical notion.
+     The psychoacoustic notion should go into a 1PCH or so matrix.
+     Columns 2 to 4 (Confidence, Score, RealAmplitude) are not yet
+     well defined. They are used by the f0 program at Ircam with 
+     the '<i>long output, -L</i>' option.
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="Frequency" occurrence="required"></column>
+  <column name="Confidence" occurrence="optional"></column>
+  <column name="Score"></column>
+  <column name="RealAmplitude"></column>
+</matrix>
+
+<frame signature="1FQ0" name="FundamentalFrequencyEstimate">
+  <description>
+     Fundamental Frequency <i>f0</i> (see matrix 1FQ0)
+  </description>
+  <matrixref signature="1FQ0" occurrence="required">Fundamental Frequency estimate</matrixref>
+</frame>
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Sinusoidal Modeling</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="1PIC" name="PickedPeaks" status="standard">
+  <description>
+     These are the peaks in a short-time frequency estimate such
+     as the Short Time Fourier Transform. Frequency, Amplitude and 
+     Phase should be that of a constant sinusoid producing such
+     a peak in the frequency estimate. Phase (and Frequency and
+     Amplitude in case of nearly linearly time varying
+     parameters) is relative to the center of the window.
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows> as many as peaks estimated in the frequency estimate</rows>
+  <column name="Frequency"></column>
+  <column name="Amplitude"></column>
+  <column name="Phase"></column>
+  <column name="Confidence"></column>
+</matrix>
+
+<matrix signature="1TRC" name="SinusoidalTracks" status="standard">
+  <description>
+     Sinusoidal tracks are sinsusoids with time-varying Frequency,
+     Amplitude and Phase. Obviusly, giving these values at
+     discrete times (Frame times) only is imprecise unless an 
+     interpolation formula is provided. This is generally not done yet
+     but can easily be added in the name value table 1NVT.
+     One track is described by the rows with same index in successive
+     adjacent frames and that's what index are for, row numbers
+     being arbitrary. When such an index is absent in a frame
+     it means that the track vanishes at the instant of the frame. 
+     Again what happens after the last or before the first occurrence 
+     of that index remains to be precised. The solution adopted at
+     Ircam is to get sure that the first and the last occurrence
+     always have a zero amplitude.
+     
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>
+     as many as sinusoidal tracks.
+  </rows>
+  <column name="Index"></column>
+  <column name="Frequency"></column>
+  <column name="Amplitude"></column>
+  <column name="Phase"></column>
+</matrix>
+
+<matrix signature="1HRM" name="HarmonicPartials" status="standard">
+  <description>
+    Harmonic Partials are sinsusoids with time-varying Frequency,
+     Amplitude and Phase and such that each one has a frequency 
+     which is close, or at least related, to the integer ith multiple
+     (harmonic) of a common fundamental frequency (see
+     <matrixref signature="1FQ0"> 1FQ0</matrixref>). 
+     This integer number i, which is usually named the
+     harmonic number, is named 'Index' here and figures in the
+     first column. In a given 1HRM matrix, an index value should
+     not appear more than once. Some Indexes may be absent in
+     certain matrices meaning that the corresponding harmonic
+     partial vanishes or has not been detected.
+     See matrix <matrixref signature="1TRC"> 1TRC</matrixref>
+     for other properties.
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>A row describes one harmonic partial</rows>
+  <column name="Index">			harmonic number of the partial 		</column>
+  <column name="Frequency" unit="Hz">	partial frequency	</column>
+  <column name="Amplitude">		partial amplitude	</column>
+  <column name="Phase">			partial phase, between -pi and pi
+  </column>
+</matrix>
+
+
+
+<frame signature="1PIC" name="PickedPeaks" status="standard">
+  <description></description>
+  <matrixref signature="1PIC" occurrence="required">PickedPeaks</matrixref>
+ 
+</frame>
+
+<frame signature="1TRC" name="SinusoidalTracks" status="standard">
+  <description></description>
+  <matrixref signature="1TRC" occurrence="required">SinusoidalTracks</matrixref> 
+</frame>
+
+<frame signature="1HRM" name="HarmonicPartials" status="standard">
+  <description></description>
+  <matrixref signature="1HRM" occurrence="required"/>
+</frame>
+
+
+<matrix signature="1HRE" name="HarmonicityEstimate">
+  <description></description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="MeanDeltaFrequency"></column>
+  <column name="Harmonicity"></column>
+  <column name="WeightedHarmonicity"></column>
+</matrix>
+
+<frame signature="1HRE" name="HarmonicityEstimate" status="experimental">
+  <description></description>
+  <matrixref signature="1HRE" occurrence="required">Harmonicity</matrixref>
+</frame>
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Spectral Envelopes, Transfer Functions and Filters</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="IENV" name="SpectralEnvelopeInfo">
+  <description>
+	Spectral envelopes information matrix, defines the interpretation 
+	of the following <matrixref signature="1ENV">1ENV matrix</matrixref>
+        The linear+logarithmic scaling is linear under a certain
+	frequency called Break Frequency, then logarithmic above.
+        The exact formula is described in:
+	Diemo Schwarz, <a href="http://www.ircam.fr/anasyn/schwarz/da/"><i>Spectral Envelopes in Sound Analysis and Synthesis</i></a>, Master's thesis, 1998.
+  </description>
+
+  <datatype>
+    <float/><double/>
+  </datatype>
+
+  <rows num="1"/>
+
+  <column name="HighestBinFrequency" unit="Hz">	
+	Frequency of the highest bin of the 
+	<matrixref signature="1ENV">1ENV matrix</matrixref>
+  </column>
+
+  <column name="ScaleType">
+	0 for linear, 1 for linear+logarithmic scaling
+  </column>
+
+  <column name="BreakFrequency" unit="Hz">
+	break frequency when linear+logarithmic scaling
+  </column>
+</matrix>
+
+
+<matrix signature="1ENV" name="SpectralEnvelope">
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <description>
+     Spectral envelope or magnitude transfer function
+     in sampled representation.
+     A spectral envelope is the envelope of the magnitude of
+     a short-time frequency estimate such
+     as the Short Time Fourier Transform. 
+
+     The <i>n</i> envelope bins in the rows of this matrix define
+     <i>n</i> equidistant spectral envelope points from 0 Hz to
+     <i>HighestBinFrequency</i>.  The envelope's amplitude outside
+     this range is to be considered as zero.
+
+     See for instance:
+	Diemo Schwarz, <a href="http://www.ircam.fr/anasyn/schwarz/da/"><i>Spectral Envelopes in Sound Analysis and Synthesis</i></a>, Master's thesis, 1998.
+  </description>
+  <rows>
+	A row corresponds to one bin of the spectral envelope,
+	containing its linear amplitude
+  </rows> 
+  <column name="Env">envelope bins</column>
+</matrix>
+
+
+<frame signature="1ENV" name="SpectralEnvelope" status="proposed">
+  <description>
+     The reason for the optional 1GAI matrix is that in some
+     cases it is useful to force the desired gain for the synthesised
+     signal.
+  </description>
+  <matrixref signature="IENV" occurrence="optional"/>
+  <matrixref signature="1ENV" occurrence="required"/>
+  <matrixref signature="1GAI" occurrence="optional">
+    gain of the original signal = desired gain for the synthesised signal
+  </matrixref>
+</frame>
+
+
+
+<matrix signature="ITFC" name="TransferFunctionCoefficientsInfo">
+  <description>
+     Transfer function coefficients information matrix,
+      defines interpretation
+        of following transfer function coefficients matrix such as 
+        <matrixref signature="1CEC"> 1CEC</matrixref>,
+        <matrixref signature="1ARA"> 1ARA</matrixref>,
+        <matrixref signature="1ARR"> 1ARR</matrixref>,
+        <matrixref signature="1ARK"> 1ARK</matrixref>.
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows num="1"/>
+  <column name="SamplingRate" unit="Hz">
+        SamplingRate corresponding to the transfer 
+        function coefficients.
+  </column>
+
+  <column name="Order">
+        Order of the estimation or number of coefficients of the
+        corresponding filter.
+  </column>
+</matrix>
+
+
+
+<matrix signature="1CEC" name="CepstralCoefs">
+  <description>Cepstral coefficients as in text books</description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>
+    As many as Cepstral Coefficients wished.
+  </rows>
+  <column name="CepstralCoefficients"></column>
+</matrix>
+
+<frame signature="1CEC" name="CepstralCoefs">
+  <description></description>
+  <matrixref signature="1CEC" occurrence="required">CepstralCoefs</matrixref>
+</frame>
+
+
+<matrix signature="1ARA" name="ARACoefs">
+  <description>Autoregressive coefficients  as in text books
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>The rows contain <var>p + 1</var> autoregressive coefficients
+    <var>a<sub>0</sub></var> to <var>a<sub>p</sub></var>, where
+    <var>p</var> is the <emph>order</emph> of the 
+    autoregressive filer.
+  </rows>
+  <column name="AutoRegressiveCoefficients"></column>
+</matrix>
+
+<matrix signature="1ARK" name="ARKCoefs">
+  <description></description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>The rows contain <var>p</var> reflection coefficients
+    <var>k<sub>1</sub></var> to <var>k<sub>p</sub></var>, where
+    <var>p</var> is the <emph>order</emph> of the 
+    lattice filer.
+  </rows>
+  <column name="ReflectionCoefficients"></column>
+</matrix>
+      
+<matrix signature="1ARR" name="ARRCoefs">
+  <description></description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>The rows contain <var>p + 1</var> autocorrelation coefficients
+    <var>r<sub>0</sub></var> to <var>r<sub>p</sub></var>.
+  </rows>
+  <column name="AutoCorrelationCoefficients"></column>
+</matrix>
+
+<frame signature="1ARA" name="ARKCoefs">
+  <description></description>
+  <matrixref signature="1GAI" occurrence="required">Gain</matrixref>
+  <matrixref signature="1ARA" occurrence="required">ARCoefs</matrixref> 
+</frame>
+
+<frame signature="1ARK" name="ARKCoefs">
+  <description></description>
+  <matrixref signature="1GAI" occurrence="required">Gain</matrixref>
+  <matrixref signature="1ARK" occurrence="required">ARCoefs</matrixref> 
+</frame>
+ 
+<frame signature="1ARR" name="ARRCoefs">
+  <description></description>
+  <matrixref signature="1ARR" occurrence="required">ARCoefs</matrixref>
+</frame>
+
+
+
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Resonances</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<description title="Note">There exists a little confusion about the <matrixref
+signature="1RES">1RES</matrixref> and <matrixref
+signature="2RES">2RES</matrixref> matrix type.  To be cleared up.</description>
+
+<matrix signature="1FOF" name="Formants">
+  <description>
+     Formant Waveforms as described in Chant.
+     <br/>
+     Could be changed sometime to use 2RES plus a new 2FOF which
+     would contain the columns Tex, DebAtt and Atten
+     which are what FOF adds to RES.
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="Frequency"></column>
+  <column name="Amplitude"></column>
+  <column name="BandWidth"></column>
+  <column name="Tex"></column>
+  <column name="DebAtt"></column>
+  <column name="Atten"></column>
+  <column name="Phase"></column>
+</matrix>
+
+<matrix signature="2RES" name="Filters" status="unclear">
+  <description>
+     Resonances/Exponentially Decaying Sinusoids.  Resonances data can
+     describe the characteristics of a resonant system like a bank of
+     second order section-filters, or can specify parameters for a
+     model of sinusoids with fixed frequencies and exponentially
+     decaying amplitudes. (If you put an impulse into such a group of
+     filter banks, the output should be a sum of sinusoids with fixed
+     frequencies and exponentially decaying amplitudes, so these two
+     situations are in a certain sense the same.)
+
+     The decay curve of a resonance should be the same as that of a
+     two-pole filter with bandwidth equal to decay rate divided by pi.
+     This formula gives the amplitude of each sinusoid over time:
+     <pre>
+        amp(t) = initial_amp * e ^ (- decay_rate * t)
+     </pre>
+     The phase of a resonance specifies the initial phase 
+     of each decaying sinusoid. 
+
+     Ircam's programs still use the <matrixref signature="1RES">previous 
+     definition 1RES</matrixref>, i.e. columns 3 to 5 being:
+     <br/>
+     3. BandWidth 
+     <br/>
+     4. Saliance 
+     <br/>
+     5. Normalisation of amplitude
+     <p/>
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>resonances </rows>
+  <column name="Frequency"></column>
+  <column name="Amplitude"></column>
+  <column name="DecayRate"></column>
+  <column name="Phase"></column>
+</matrix>
+
+<matrix signature="1RES" name="Filters" status="IRCAM only?">
+  <description>
+     See the <matrixref signature="2RES">new 2RES canonical resonance
+     definition</matrixref> for description.<P/>
+
+     Ircam's programs still use this previous definition,
+     i.e. columns 3 to 5 being:
+     <br/>
+     3. BandWidth 
+     <br/>
+     4. Saliance 
+     <br/>
+     5. Normalisation of amplitude
+     <p/>
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>resonances </rows>
+  <column name="Frequency"></column>
+  <column name="Amplitude"></column>
+  <column name="BandWidth"></column>
+  <column name="Saliance"></column>
+  <column name="Correction">Normalisation of amplitude</column>
+</matrix>
+
+<matrix signature="1DIS" name="NoiseDistribution">
+  <description>
+    Noise  Distribution matrix, defines a white noise random signal
+    Column Distribution is an identifier (0 is uniform, 1 Gaussian...)
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="Distribution"></column>
+  <column name="Amplitude">should be variance or standard deviation
+  </column>
+</matrix>
+
+
+
+<frame signature="1NOI" name="">
+  <description></description>
+<!-- temporarily removed IDIS, because noone remembers how it is defined and its not used anyway
+  <matrixref signature="IDIS" occurrence="required">NoiseInfo</matrixref> 
+-->
+  <matrixref signature="1DIS" occurrence="required">NoiseDistribution</matrixref> 
+</frame>
+
+		       
+<frame signature="1FOB" name="">
+  <description></description>
+  <matrixref signature="1FQ0" occurrence="required">PitchModeHit</matrixref>
+  <matrixref signature="1FOF" occurrence="required">Formants</matrixref>
+  <matrixref signature="1CHA" occurrence="required">FormantsChannels</matrixref> 
+</frame>
+
+		       
+<frame signature="1REB" name="">
+  <description></description>
+  <matrixref signature="1RES" occurrence="required">Filters</matrixref>
+  <matrixref signature="1CHA" occurrence="required">FiltersChannels</matrixref>
+</frame>
+
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Fourier Transform</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="ISTF" name="FourierTransformInfo">
+  <description>
+     See <matrixref signature="1STF">1STF</matrixref> for details.
+     WindowDuration is the duration of the window, in seconds,
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="DFTPeriod">i.e., Sampling Rate in Hertz</column>
+  <column name="WindowDuration"> in seconds.</column>
+  <column name="FFTSize"></column>
+</matrix>
+
+<matrix signature="1STF" name="FourierTransform">
+  <description>
+     1STF frames represent the data that come out of a discrete short-term time-domain to frequency-domain transform such as an FFT.
+
+     Here is a precise mathematical definition of this frame type: 
+    <br/>
+    Let s(i) be a discrete signal with sampling rate SR Hertz 
+    <br/>
+    Let w(m) be a window defined with the support [0, M-1], i.e., w(m)=0 for m&lt;0 and m&gt;=M .
+    M is called the <i>Window Size in Samples</i>. The corresponding <i>Window Duration</i> in seconds
+    is M/(Sampling Frequency).
+    <br/>
+    Let N be the size of the transform 
+    <br/>
+     We define the input to the transform, x(n), as follows.
+     Note that the windowed signal is 'put' at the beginning of the vector x(n).
+     <pre>
+Let x(n) =   s(i+n) * w(n)  for  0 lessThanOrEqual n lessThanOrEqual M-1
+    x(n) =   0              for  M lessThanOrEqual n lessThanOrEqual N-1
+     </pre>
+(This is slightly redundant, since we define w(m)=0 when m&gt;=M.)
+The 1STF matrix data is the Discrete Fourier Transform (DFT) of size N, i.e. the X(k) as follows. 
+The DFT is a length N vector X, with these elements: 
+     <pre>
+              N-1
+       X(k) = sum  x(n) * exp(-j * 2 * pi * k * n/N)
+              n=0
+
+       0 lessThanOrEqual k lessThanOrEqual N-1
+     </pre>
+The time tag in a 1STF frame is the time of the center of the window, i.e., (i + M/2)/SR, not the beginning.
+<br/>
+Notes: 
+<br/>
+    This definition corresponds to the output of Matlab's (and UDI's) FFTfunction 
+    The real and imaginary parts come directly from this formula: therefore, if you compute a phase as atan2(imaginary, real), it is the phase of the
+    corresponding COSINUSOID (and not sinusoid as we are used in additive synthesis) at time (i)/SR. 
+    Note that the windowed signal is 'put' at the beginning of the vector x(n) (then zero padding follows) and this is crucial for the phase definition. 
+    Because of aliasing and foldover above the Nyquist frequency (and below the negative Nyquist frequency), the output of the DFT can be thought
+    of as a periodic function of frequency over the range -infinity to infinity. The period of this function is the range from the negative Nyquist
+    frequency to the positive Nyquist frequency, in other words, the sampling rate of the input signal
+  </description>
+  <datatype>
+    <float/><double/><int16/><int32/>
+  </datatype>
+  <rows>Bins</rows>
+  <column name="Real"></column>
+  <column name="Imaginary"></column>
+</matrix>
+
+<frame signature="ISTF" name="FourierTransformInfo">
+  <description></description>
+  <matrixref signature="ISTF" occurrence="required">Info</matrixref>
+</frame>
+
+<frame signature="1STF" name="FourierTransform">
+  <description></description>
+  <matrixref signature="ISTF" occurrence="required">Info</matrixref>
+  <matrixref signature="1STF" occurrence="required">
+   FourierTransform</matrixref> 
+  <matrixref signature="1WIN" occurrence="optional">
+   Window applied on the signal prior to Fourier transform.
+   </matrixref> 
+</frame>
+
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Energy</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="INRG" name="ScaleAndFactor">
+  <description>
+    Energy information matrix, defines interpretation
+    of following <matrixref signature="1NRG">1NRG matrix
+    </matrixref>
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows num="1"/>
+  <column name="Scale"></column>
+  <column name="NormalisationFactor"></column>
+</matrix>
+
+<matrix signature="1NRG" name="Energy">
+  <description>
+    Short time energy of the signal, i.e. 
+     <pre>
+                    m+N-1
+       E(k) = 1/N *  sum  x(n) * x(n)
+                    n=m
+     </pre>
+    The time of the frame should be the center of the interval
+    [m, m+N-1].
+    <br/>
+
+    If a window is applied prior to calculation, 
+    it should be taken into acount and
+    a <matrixref signature="IWIN">IWIN</matrixref>
+    and an optional <matrixref signature="1WIN">1WIN</matrixref>
+    can be joined.
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows num="1"/>
+  <column name="Energy"></column>
+</matrix>
+
+<frame signature="1NRG" name="">
+  <description></description>
+  <matrixref signature="INRG" occurrence="required">ScaleAndFactor</matrixref>
+  <matrixref signature="1NRG" occurrence="required">Energy</matrixref> 
+  <matrixref signature="IWIN" occurrence="optional">WindowInfo</matrixref> 
+  <matrixref signature="1WIN" occurrence="optional">Window</matrixref> 
+</frame>
+
+
+<matrix signature="1BND" name="Bands">
+  <description></description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="LowerFrequencyLimit"></column>
+  <column name="UpperFrequencyLimit"></column>
+</matrix>
+
+<frame signature="1BND" name="Bands">
+  <description></description>
+  <matrixref signature="1BND" occurrence="required">Bands</matrixref>
+</frame>
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Time-Domain Samples</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="ITDS" name="TimeDomainSamplesInfo">
+  <description>
+      Time-Domain Samples information matrix, defines interpretation
+      of following <matrixref signature="1TDS">1TDS matrix
+      </matrixref>
+  </description>
+  <rows   num="1"/>
+  <column name="SamplingRate"></column>
+</matrix>
+
+
+<matrix signature="1TDS" name="TimeDomainSamples">
+  <description>
+     Restrict this type to linearly quantized samples with 
+     no compression
+     Unlike most other SDIF frame types, a frame of 1TDS data
+     represents an interval of time (equal to the number of rows 
+     in the 1TDS matrix divided by the sampling rate) 
+     rather than an instant of time. The time tag of a 1TDS 
+     frame represents the beginning of this interval.
+     Most SDIF streams containing 1TDS data will consist of a 
+     single large frame at time zero with all of the samples for the 
+     stream in a single matrix. The same data could be 
+     represented equivalently in a series of shorter frames.
+     There is also the possibility of "gaps" in the time axis,
+  </description>
+  <rows> Sample frames </rows>
+  <column name="Sample"> Amplitudes in each channel. Linear.
+           All but the first are optional.
+  </column>
+</matrix>
+
+
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Time markers</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="1PEM" name="PeriodMarker">
+  <description>
+<strong>1PEM</strong> matrix type stands for <strong>PeriodMarker</strong>.
+PeriodMarker are used for pitch-synchronous algorithm such as PSOLA
+synthesis, or pitch-synchronous analysis.
+The most general definition of period markers is "the distance
+between two markers is equal to the local fundamental period". Instead
+of this definition which only gives a relative positionning of the
+period markers, an exact positionning of the period markers is often
+required. This absolute positionning of the period markers depends on
+the analysis method used. This is the reason why it is essential to
+refer to the analysis method used in the matrix.
+The matrix can contain other columns for the parameters of the method.
+
+<p/><strong>Method:</strong> 1
+<br/>
+<strong>Definition:</strong> phase +Pi/2 of the 1st partial SINUSOID which represents this partial
+<br/>
+<strong>Note:</strong> To be coherent with additive partial , a partial is represented
+by a sinusoid. The interesting point is at phase +Pi/2 since it is
+closer to the maximum of energy needed for PSOLA.
+<br/>
+<strong>Method:</strong> 2
+<br/>
+<strong>Definition:</strong> group delay 
+<br/>
+<strong>Note:</strong> In brief, an amplitude wheigted mean group
+delay provides a delay which, added to the begining time of the
+analysis frame gives the time of the mark
+<br/>
+<strong>Method:</strong> 3
+<br/>
+<strong>Definition:</strong> Glottale closure
+<br/>
+<strong>Note:</strong> A method developed for speech
+<br/>
+<strong>Method:</strong> 4
+<br/>
+<strong>Definition:</strong>Maximum of energy synchronised with F0       
+<br/>
+<strong>Note:</strong> Needs a precise definition
+<br/>
+<strong>Method:</strong> 5 ...
+</description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="Identifier"></column>
+  <column name="Parameter1"></column>
+  <column name="Parameter2"></column>
+  <column name="Parameter3"></column>
+</matrix>
+
+<matrix signature="ITMR" name="TransientMarkerRepresentation">
+  <description></description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="Index"></column>
+  <column name="Frequency"></column>
+  <column name="Amplitude"></column>
+  <column name="Phase"></column>
+</matrix>
+
+<matrix signature="ITMI" name="TransientMarkerIdentifier">
+
+  <description>Matrix identifier for transient in the signal such as
+  occurs at tke beginning of percussive sounds and which need special
+  care.
+  </description>
+
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+
+  <column name="Index">Identifier of the method used to detect and
+  estimate this marker</column>
+</matrix>
+
+
+<matrix signature="1BEG" name="SegmentStart" status="proposed">
+  <description>
+    This matrix type describes the start of a temporal segment of
+    sound.  Segments can be identified by a unique Id (over the whole
+    SDIF file or entity).
+  </description>
+  <uint16/><uint32/>
+  <rows>One row per segment that starts at this frame's time </rows>
+  <column name="Id" occurrence="optional">
+    File-unique identifier of segment.
+  </column>
+</matrix>
+
+<matrix signature="1END" name="SegmentEnd" status="proposed">
+  <description>
+    This matrix type describes the end of a temporal segment of
+    sound.  Segments can be identified by a unique Id (over the whole
+    SDIF file or entity).
+  </description>
+  <uint16/><uint32/>
+  <rows>One row per segment that starts at this frame's time </rows>
+  <column name="Id" occurrence="optional">
+    File-unique identifier of segment.
+  </column>
+</matrix>
+
+
+<matrix signature="1SEG" name="Segmentation" status="proposed">
+  <description>
+    This matrix type describes a temporal segmentation mark of
+    sound.
+  </description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows>One</rows>
+  <column name="Confidence" occurrence="optional">
+    Confidence that the placement of the segmentation mark was correct.
+  </column>
+</matrix>
+
+<frame signature="1SEG" name="Segmentation" status="proposed">
+  <description>
+    This frame type describes a temporal segmentation mark of sound.
+  </description>
+  <matrixref signature="1SEG" occurrence="required">Segmentation</matrixref>
+</frame>
+
+
+<matrix signature="1LAB" name="Label" status="proposed">
+  <description>
+    This string matrix type gives the label of any temporal mark
+    described in a <frameref signature="1MRK">Mark frame</frameref>.
+  </description>
+  <text/>
+  <column name="Chars">The text</column>
+</matrix>
+
+
+<frame signature="1MRK" name="Marker" status="proposed">
+  <description>
+    <strong>1MRK</strong> frame type stands for
+    <strong>Marker</strong>.  Usually analysis method estimate
+    parameters at a given time (examples: sinusoidal analysis,
+    spectral analysis, ...). In the opposite, the results of some
+    analysis method can be a serie of times (examples: detection of
+    the times where abrupt changes occur, detection of the times of
+    glottal closures, ...). The results of these analysis, which is
+    essentially a series of times, is stored in as a series of frames.
+    The time of each of these frames is the resulis of the analysis
+    and the matrix inside each frame describe what this frame refer
+    to, or in other word which analysis method has decided to point to
+    this time (example: this frame time has been pointed by a glottal
+    closure detection algorithm). In some cases, it is also important
+    to add information related to the results (example: coded waveform
+    of a transient).
+  </description>
+
+  <matrixref signature="1BEG" occurrence="optional">SegmentStart</matrixref>
+  <matrixref signature="1END" occurrence="optional">SegmentEnd</matrixref>
+  <matrixref signature="1SEG" occurrence="optional">Segmentation</matrixref>
+  <matrixref signature="1LAB" occurrence="optional">Label</matrixref>
+  <matrixref signature="1PEM" occurrence="optional">PeriodMarker</matrixref>
+  <matrixref signature="ITMR" occurrence="optional">TransientMarkerRepresentation</matrixref>
+  <matrixref signature="ITMI" occurrence="optional">TransientMarkerIdentifier</matrixref> 
+
+</frame>
+
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>Voiced-Unvoiced Decision</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="1VUN" name="VoicedUnvoicedNorm">
+  <description>
+<strong>1VUN</strong> matrix type stands for <strong>Voiced/Unvoiced
+Normalized</strong>. It represents the voicing coefficient
+(harmonicity or periodicity coefficient in the general case) at a
+given time. The "voicing" coefficient is a measure of the part of the
+signal which is produced by the vocal folds (which is harmonic or
+periodic in the general case) at a given time. Range: [0,1]. 0 means
+purely unvoiced, 1 means purely voiced.
+</description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="VoicingCoefficient">Normalized voicing coefficient, range: [0,1]</column>
+</matrix>
+
+<matrix signature="1VUF" name="VoicedUnvoicedFreq">
+  <description>  
+<strong>1VUF</strong> matrix type stands for <strong>Voiced/Unvoiced
+Frequency</strong>. It is the cutting frequency below which the signal
+is considered as voiced (harmonic or periodic in the general case) and
+above which it is considered as unvoiced (non-harmonic, non-periodic
+or noisy in the general case).  Range: [0, 1/2 Nyquist Frequency].
+</description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="CuttingFrequency" unit="Hz">Voiced/Unvoiced cutting frequency, range: [0, 1/2 Nyquist Frequency]</column>
+</matrix>
+
+
+<frame signature="1VUV" name="VoicedUnvoiced" status="proposed">
+  <description>
+<strong>1VUV</strong> frame type stands for
+<strong>Voiced/Unvoiced</strong>. This frame contains information
+about the voicing (harmonicity or periodiodicity in the general case)
+property of the current time.
+</description>
+  <matrixref signature="1VUN" occurrence="required">VoicedUnvoicedNorm</matrixref>
+  <matrixref signature="1VUF" occurrence="required">VoicedUnvoicedFreq</matrixref> 
+</frame>
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>MIDI Data</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="1MID" name="MIDIEvent" status="proposed">
+  <description>
+    This matrix contains raw MIDI event data.
+  </description>
+  <byte/>
+  <rows>MIDI events occuring at the frame's time</rows>
+  <column name="Status" occurrence="required">
+    MIDI status byte.
+  </column>
+  <column name="Data1" occurrence="optional">
+    First data byte.
+  </column>
+  <column name="Data2" occurrence="optional">
+    Second data byte.
+  </column>
+</matrix>
+
+<matrix signature="1SYX" name="MIDISystemExclusive" status="proposed">
+  <description>
+    This matrix contains one raw MIDI system exclusive event.
+  </description>
+  <byte/>
+  <rows>Sysex bytes, including the leading and the closing bytes</rows>
+  <column name="Data" occurrence="required">
+    Raw data bytes.
+  </column>
+</matrix>
+
+<frame signature="1MID" name="MIDI" status="proposed">
+  <description>
+    This frame type contains raw MIDI event data.
+  </description>
+  <matrixref signature="1MID" occurrence="optional">
+    MIDI event data
+  </matrixref>
+  <matrixref signature="1SYX" occurrence="optional">
+    MIDI system exclusive data
+  </matrixref>
+</frame>
+
+
+
+
+
+
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<section>jMax Physical Model Parameters</section>
+<!--  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+
+<matrix signature="EMPM" name="Tableau">
+  <description></description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="Value"></column>
+  <column name="Index"></column>
+</matrix>
+
+<matrix signature="EMJR" name="EndRecording">
+  <description></description>
+  <datatype>
+    <float/><double/>
+  </datatype>
+  <rows></rows>
+  <column name="Record"></column>
+</matrix>
+
+<frame signature="EFPM" name="PhysicalModelParameters" status="private">
+  <description></description>
+  <matrixref signature="EMPM" occurrence="required">Tableau</matrixref>
+  <matrixref signature="EMJR" occurrence="required">EndRecording</matrixref>
+</frame>
+
+
+
+</sdif-tdl>

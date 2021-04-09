@@ -1,0 +1,59 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <string name="targetFramework">IBCarbonFramework</string>
+  <object name="rootObject" class="NSCustomObject" id="1">
+    <string name="customClass">NSApplication</string>
+  </object>
+  <array count="4" name="allObjects">
+    <object class="IBCarbonWindow" id="166">
+      <string name="windowRect">449 297 479 750 </string>
+      <string name="title">Window</string>
+      <object name="rootControl" class="IBCarbonRootControl" id="167">
+        <string name="bounds">0 0 30 453 </string>
+        <string name="viewFrame">0 0 453 30 </string>
+        <array count="2" name="subviews">
+          <object class="IBCarbonButton" id="200">
+            <string name="bounds">4 312 24 448 </string>
+            <string name="viewFrame">312 4 136 20 </string>
+            <ostype name="controlSignature">PBUT</ostype>
+            <int name="controlID">1</int>
+            <string name="title">Stop</string>
+            <ostype name="command">Stop</ostype>
+          </object>
+          <object class="IBCarbonProgressBar" id="201">
+            <string name="bounds">5 5 24 310 </string>
+            <string name="viewFrame">5 5 305 19 </string>
+            <ostype name="controlSignature">PBAR</ostype>
+            <int name="controlID">1</int>
+            <boolean name="indeterminate">FALSE</boolean>
+            <int name="maximumValue">1000</int>
+          </object>
+        </array>
+      </object>
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCloseBox">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="isConstrained">FALSE</boolean>
+    </object>
+    <reference idRef="167"/>
+    <reference idRef="200"/>
+    <reference idRef="201"/>
+  </array>
+  <array count="4" name="allParents">
+    <reference idRef="1"/>
+    <reference idRef="166"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+  </array>
+  <dictionary count="2" name="nameTable">
+    <string>Files Owner</string>
+    <reference idRef="1"/>
+    <string>MainWindow</string>
+    <reference idRef="166"/>
+  </dictionary>
+  <unsigned_int name="nextObjectID">202</unsigned_int>
+</object>

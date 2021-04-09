@@ -1,0 +1,81 @@
+copied from
+http://archive.cnmat.berkeley.edu/SDIF/proposals/window-enumeration.text
+========================================================================
+1WIN Window Matrix
+
+Specifies a window function, e.g., a window used for a short-term fourier
+transform.
+
+    Analysis window type code:
+     each hundred describes a different kind of window. Variations
+    are described by tens and units. Parameters need to be given
+    in the 1WIN matrix after the analysis window type in the order
+    in which they are listed here.
+
+    code  window
+    ---- --------
+    000  rectangle
+
+    100  triangle
+
+    200  cos^a(x)
+       one parameter -> a (common values 1.0 - 4.0)
+
+    300  hamming
+
+    400  blackman
+    401  exact-blackman
+    402  blackman-harris-3 (minimum 3-samples blackman-harris)
+    403  blackman-harris-3-61dB (minimum 3-samples blackman-harris)
+    404  blackman-harris-4 (minimum 4-samples blackman-harris)
+    405  blackman-harris-4-74dB (minimum 4-samples blackman-harris)
+
+    500  gaussian
+       one parameter -> a (common values 2.5 - 3.5)
+
+    600  kaiser-bessel
+       one parameter -> a (common values 2.0 - 3.5)
+    601  kaiser-bessel-4 (4 sample kaiser-bessel)
+       one parameter -> a (common value 3.0)
+
+    700 tukey
+       one parameter -> a (common values 0.25 - 0.75)
+
+    800 bohman
+
+    900 poisson
+       one parameter -> a (common values 1.0 - 3.0)
+
+    1000 hanning-poisson
+       one parameter -> a (common values 0.5 - 2.0)
+
+    1100 cauchy
+       one parameter -> a (common values 3.0 - 5.0)
+
+    1200 dolph-chebyshev
+       one parameter -> a (common values 2.5 - 4.0)
+
+    1300 barcilon-temes
+       one parameter -> a (common values 3.0 - 4.0)
+
+    1400 riemann
+
+    1500 riesz
+
+    1600 de la valle-poussin
+
+    1700 helie-A
+	two parameters: a and b
+    1701 helie-B
+	three parameters: a, b and c
+
+
+    SOURCES:
+    F. J. Harris, On the use of windows for harmonic analysis
+    with the discrete fourier transform, Proc. IEEE, Vol. 66, No 1, Jan. 78
+    and for the two helie's windows:
+    T. Helie, Extraction des parametres de partiels par modelisation de la
+    transformation de fourier a court terme utilisant des fenetres spectrales
+    sans lobes. Master's thesis, Telecom-Paris, 1997.
+
+

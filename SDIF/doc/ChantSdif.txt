@@ -1,0 +1,293 @@
+
+
+
+
+		Créer une séquence Diphone Chant avec un fichier texte
+
+
+
+
+Notes :
+
+SDIF : Sound Description Interface Format
+FOF : Forme d'Onde Formantique.
+
+
+
+
+
+
+1. Possibilités
+
+	Diphone lit des fichiers SDIF comportant des informations pour Chant de type
+ banc de FOFs. Diphone ne peut comprendre qu'un seul bancs de FOFs par fichier.
+ Par contre, le nombre de FOFs du banc de FOFs n'est limité que par la mémoire (RAM).
+
+
+
+
+
+2. Procédure générale
+
+	a. Ecrire un fichier texte pseudo-SDIF 'fof.sdif.txt'.
+	b. Convertir 'foo.sdif.txt' en un fichier SDIF 'fof.sdif'.
+	c. Importer le fichier SDIF 'fof.sdif' dans Diphone.
+
+
+
+
+
+3. Ecrire un fichier texte pseudo-SDIF
+
+	La structure de ce fichier texte, d-ecrite ci-après, est une suite de champs
+ divers séparés par un séparateur (espaces, tabulations, retours chariot).
+
+
+	3.1. Constitution générale du fichier texte pseudo-SDIF
+
+    Un fichier texte pseudo-SDIF est constitué : 
+	a. d'une entête 'SDIF',
+	b. d'un bloc (Chunk) optionnel d'informations générale,
+	c. d'un Chunk optionnel de déclarations d'identificateurs d'objets
+	   (1 seul : banc de FOFs)
+	d. d'un Chunk constitué de Frames ordonnés par le champ 'Time'.
+	e. d'un mot de fin de fichier 'ENDF'
+
+	L'ordre des Chunk est essentiel.
+
+
+
+	3.2 Chunk d'informations générales
+
+
+Exemple :
+
+SITC
+{
+  SamplingRate        44100.  ;
+  EndTime             5.00;
+  ChantMaxNbSubObjs   5;
+}
+
+
+
+	'SITC' est la signature de début de bloc d'information. Les informations sont
+ écrites entre des accolades. Chaque information est décrite avec un nom à gauche et
+ une valeur à droite suivie d'un point virgule.
+	 Par rapport à Chant, les 3 informations données dans l'exemple sont trés
+ utiles. 'SamplingRate' est la fréquence d'échantillonage à la synthèse. Celle-ci peut
+ toutefois être changer par Diphone lors de l'exportation de  la séquence Diphone vers
+ Chant. 'EndTime' est le temps de fin du Diphone où de sa synthèse par Chant.
+'ChantMaxNbSubObjs' est le nombre de FOFs maximum que l'on peut trouver dans le fichier.
+
+
+
+
+	3.3. Chunk de déclaration des objets.
+
+
+	Diphone n'accepte à l'heure actuelle qu'un seul banc de FOFs pour un fichier
+ SDIF donné. Ainsi, il y a un seul objet banc de FOFs à déclarer. A cet objet, on lui
+ attribut le nombre entier 0 comme numéro d'identification.
+
+Exemple :
+
+SSIC
+{
+  0  Chant:Patch0/1/FOB/1/5/0./5.;
+}
+
+
+
+	'SSIC' est la signature de début de bloc d'information. Les déclarations
+ d'objets sont écrites entre des accolades. La déclaration est décrite par le numéro
+ d'identification et un nom de source ou de direction et une description de l'objet
+ séparés par ':'.
+	Dans l'exemple, 0 est le numéro d'identification, 'Chant' est le nom de
+ destination, 'Patch0/1/FOB/1/5/0./5.' est la description.
+
+ 'Patch0/1/' : signifie que l'objet appartient au 1er patch0.
+ 'FOB/1/' : signifie qu'il s'agit du 1er banc de FOFs du patch.
+ '5/' : est le nombre de FOFs du banc de FOFs.
+ '0./0.5' : sont les temps de début et de fin du banc de FOFs.
+
+ Un Diphone Chant n'utilisant qu'un seul banc de FOFs à l'heure actuelle, seule la
+ chaine 'Chant:Patch0/1/FOB/1/' est acceptable pour le début de la destination et
+ description. Cependant on peut avoir un grand nombre de FOFs et un Diphone très long.
+
+
+
+	3.4. Chunk des Frames
+
+	Le Chunk des Frames commence par 'SDFC' et se termine par 'ENDC'. Entre ces deux
+ signatures, se suivent plusieurs Frames. Comme le fichier n'a des données que sur 1
+ banc de FOFs, la signature de Frame est toujours '1FOB'.
+	Un Frame '1FOB' est composé d'une entête, d'une matrice pour la fréquence
+ d'excitation (ou fréquence fondamentale) du banc de FOFs, et d'une matrice pour les
+ paramètres de chaque FOFs.
+
+		3.4.1. Entête de Frame
+
+	L'entête d'un Frames est composée de sa signature (pour un banc de FOFs : '1FOF'),
+ du nombre de matrices du Frame (2 pour Diphone), de l'identificateur d'objet (pour
+ Diphone, un seul : 0), et du temps auquel les paramètres apparaissent.
+
+Exemple :
+
+1FOB	2	0	2.1
+
+
+		3.4.2. Matrice pour la fréquence d'excitation du banc de FOFs
+
+	Les matrices SDIF ont elles aussi une entête. Tout d'abord la signature '1FQ0'
+ qui définit le type de matrice pour decrire une fréquence fondamentale. Ensuite, on a
+ la largeur des données en nombre de bits (32 ou 64). Enfin, on a le nombre de ligne et
+ le nombre de colonne de la matrice. Dans le cas de la fréquence d'excitation du banc
+ de FOFs, il n'y a qu'une seule valeur dans la matrice. Le nombre de lignes et de
+ colonnes est donc 1.
+	Après l'entête de la matrice, on a la fréquence.
+
+Exemple :
+
+  1FQ0	32	1	1
+	110.00
+
+
+		3.4.3.	Matrice pour les paramètres des FOFs.
+
+	Cette matrice a comme signature '1FOF' (à ne pas confondre avec '1FOB').
+ Le nombre de lignes est le nombre de FOFs du banc de FOFs, et le nombre de colonnes
+ est 7, nombre de paramètres des FOFs.
+
+ Les 7 paramètres de FOFs sont (dans l'ordre) :
+	fréquence (freq),
+	amplitude (amp),
+	largeur de bande (bw),
+	durée d'exicitation (tex),
+	temps de début d'atténuation (atten),
+	durée de l'atténuation (debatt),
+	phase (phase).
+
+
+Ainsi pour une voyelle 'A' d'un ténor, on aura les paramètres
+
+		freq	amp	bw	tex	atten	debatt	phase
+
+FOF 1		650	1	80	0.002	0.05	0.004	0.
+FOF 2		1080	0.5012	90	0.002	0.05	0.004	0.
+FOF 3		2650	0.4467	120	0.002	0.05	0.004	0.
+FOF 4		2900	0.3982	130	0.002	0.05	0.004	0.
+FOF 5		3250	0.0795	140	0.002	0.05	0.004	0.
+
+
+La matrice pseudo-SDIF correspondante est :
+
+
+  1FOF	32	5	7
+	650	1	80	0.002	0.05	0.004	0.
+	1080	0.5012	90	0.002	0.05	0.004	0.
+	2650	0.4467	120	0.002	0.05	0.004	0.
+	2900	0.3982	130	0.002	0.05	0.004	0.
+	3250	0.0795	140	0.002	0.05	0.004	0.
+
+
+
+		3.4.5. Exemple d'un Frame pour un 'A' de Ténor au temps 2.1 sur un La
+
+
+1FOB	2	0	2.1
+  1FQ0	32	1	1
+	110.00
+  1FOF	32	5	7
+	650	1	80	0.002	0.05	0.004	0.
+	1080	0.5012	90	0.002	0.05	0.004	0.
+	2650	0.4467	120	0.002	0.05	0.004	0.
+	2900	0.3982	130	0.002	0.05	0.004	0.
+	3250	0.0795	140	0.002	0.05	0.004	0.
+
+
+ Le Chunk des Frames est une succession de ces frames ou les paramètres peuvent changer
+
+
+
+
+	3.5. Exemple de fichier pseudo-SDIF complet, Ténor de 'A' à 'O'
+
+
+SDIF
+
+SITC
+{
+  SamplingRate        44100.  ;
+  EndTime             5.00;
+  ChantMaxNbSubObjs   5;
+}
+
+
+SSIC
+{
+  0  Chant:Patch0/1/FOB/1/5/0./5.;
+}
+
+
+
+SDFC
+
+1FOB	2	0	0.
+  1FQ0	32	1	1
+	110.00
+  1FOF	32	5	7
+	650	1	80	0.002	0.05	0.004	0.
+	1080	0.5012	90	0.002	0.05	0.004	0.
+	2650	0.4467	120	0.002	0.05	0.004	0.
+	2900	0.3982	130	0.002	0.05	0.004	0.
+	3250	0.0795	140	0.002	0.05	0.004	0.
+
+1FOB	2	0	1.
+  1FQ0	32	1	1
+	110.00
+  1FOF	32	5	7
+	650	1	80	0.002	0.05	0.004	0.
+	1080	0.5012	90	0.002	0.05	0.004	0.
+	2650	0.4467	120	0.002	0.05	0.004	0.
+	2900	0.3982	130	0.002	0.05	0.004	0.
+	3250	0.0795	140	0.002	0.05	0.004	0.
+
+1FOB	2	0	4.
+  1FQ0	32	1	1
+	110.00
+  1FOF	32	5	7
+	400	1	40	0.002	0.05	0.004	0.
+	800	0.3163	80	0.002	0.05	0.004	0.
+	2600	0.2512	100	0.002	0.05	0.004	0.
+	2800	0.2512	120	0.002	0.05	0.004	0.
+	3000	0.0501	120	0.002	0.05	0.004	0.
+
+ENDC
+ENDF
+
+
+
+	4. Convertion du fichier texte pseudo-SDIF en un fichier SDIF
+
+	Dans la console Diphone, si le fichier texte pseudo-SDIF s'appelle 'MyFoB.sdif.txt'
+ et que l'on souhaite créer le fichier SDIF 'MyFoB.sdif', alors taper :
+
+	Diphone>    tosdif -i"MyFoB.sdif.txt" -o"MyFoB.sdif"
+
+ puis valider.
+
+
+ Si le fichier texte n'est pas conforme, alors des messages d'erreur apparaissent et la
+ conversion peut être interrompue. Pour visualiser des fichiers SDIF existant sous forme
+ de fichiers textes pseudo-SDIF, il y a la commande sdiftotext :
+
+	Diphone>    sdiftotext -i"MyFoB.sdif" -o"MyFoB.sdif.txt"
+
+ Pour obtenir l'aide sur les commandes SDIF taper :
+
+	Diphone>    sdif -h
+
+
+ Pour l'importation du fichier SDIF en tant que séquence Diphone, se référer au chapitre
+ Importation Chant de la documentation de Diphone.

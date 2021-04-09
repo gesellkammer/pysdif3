@@ -4,3 +4,7 @@ tmp
 __pycache__
 pysdif/_pysdif.c
 *egg*
+*.so
+wheelhouse/
+SDIF/build
+SDIF/*.cache

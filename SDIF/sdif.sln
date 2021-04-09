@@ -1,0 +1,31 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sdif", "sdif.vcproj", "{BA352925-3428-47E4-A9A0-9A791841725B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Dll Debug|Win32 = Dll Debug|Win32
+		Dll Release|Win32 = Dll Release|Win32
+		Release|Win32 = Release|Win32
+		Static Debug|Win32 = Static Debug|Win32
+		Static Release|Win32 = Static Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Debug|Win32.Build.0 = Debug|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Dll Debug|Win32.ActiveCfg = Debug|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Dll Debug|Win32.Build.0 = Debug|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Dll Release|Win32.ActiveCfg = Release|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Dll Release|Win32.Build.0 = Release|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Release|Win32.ActiveCfg = Release|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Release|Win32.Build.0 = Release|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Static Debug|Win32.ActiveCfg = Debug|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Static Debug|Win32.Build.0 = Debug|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Static Release|Win32.ActiveCfg = Release|Win32
+		{BA352925-3428-47E4-A9A0-9A791841725B}.Static Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

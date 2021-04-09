@@ -1,0 +1,104 @@
+SDIF Grammar
+16 July 1997
+Dominique Virolle
+
+
+
+<Sdif File>	:= FORM<FileSize>SDIF<File>
+
+<FileSize>	:= 32bits (int)
+
+
+
+
+<File>		:= [<Types Declaration>]  <ID Table><Frames>
+
+
+
+
+<Types Declaration> := TypD {   <Matrix or Frame Declaration> | ...  }
+
+<Matrix or Frame Declaration> :=   <Matrix Declaration>
+				 | <Frame Declaration>
+
+
+<Matrix Declaration>:= Mtrx <Matrix Name> <Ascii Matrix Version> {<Columns Names List>}
+
+<Matrix Name>	:= 4 chars (32bits)
+
+<Ascii Matrix Version> := Ascii integer
+
+<Columns Names List> := <Columns Names not Last><Last Column Name>
+
+<Columns Names not Last>:= <string>,
+
+<Last Column Name>:= <string>
+
+<string>	:= chars
+
+
+<Frame Declaration>:= Fram <Frame Name> <Ascii Frame Version> {<Frame Component> | ...}
+
+<Frame Name>	:=  4 chars (32bits)
+
+<Ascii Frame Version> := Ascii integer
+
+<Frame Component> := <Matrix Name>  <Frame Component Name>;
+
+<Frame Component Name> := <string>
+
+
+
+
+
+<ID Table>	:= IDTB  {  <ID declaration> | ... }
+
+<ID declaration>:= <ID number><Frame Name><Tree Way>;
+
+<ID number>	:= 32bits (int)
+
+<Tree Way>	:= <Tree Node>|...
+
+<Tree Node>	:= /<Node Number>
+
+<Node Number>	:= Ascii integer
+
+
+
+
+
+<Frames>	:= <Frame> | ...
+
+<Frame>		:= <Frame Name or Mtrx><Binary Frame Version><ID number>
+                    <Frame Size><Time><All Matrix>
+
+<Frame Name or Mtrx> :=   <Frame Name>
+			| Mtrx         //== no Frame Name == Rolf '0000'
+
+<Binary Frame Version> := 32bits (int)
+
+<Frame Size>	:=  32bits (int)
+
+<Time>		:= 64bits (double)
+
+<All Matrix>	:= <Matrix> | ...
+
+
+
+
+<Matrix>	:= <Matrix Name><Binary Matrix Version><Matrix Data Width>
+                    <Matrix Columns Number><Matrix Rows Number><Matrix Data>
+
+<Binary Matrix Version> := 32bits (int)
+
+<Matrix Data Width> := 32bits (int)
+
+<Matrix Columns Number> := 32bits (int)
+
+<Matrix Rows Number> := 32 bits (int)
+
+<Matrix Data>	:= <Matrix Row> | ...
+
+<Matrix Row>	:= <Values> | ...
+
+<Values>	:= 32bits or 64bits (float or double)

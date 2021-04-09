@@ -1,0 +1,289 @@
+
+===============================================================================
+reading
+===============================================================================
+
+Trial to make reading from memory possible (transparently!) by
+providing (but see why it doesn't work at the end of this section):
+
+
+static char *memsrc;
+static int  memlen;
+
+
+void SdifSetMemStream (char *str)
+{
+	memsrc = str;
+	if (str)
+	   memlen = strlen (str);
+}
+
+
+
+From SdifRWLowLevel.c:
+
+
+/* fread encapsule */
+size_t
+Sdiffread(void *ptr, size_t size, size_t nobj, FILE *stream)
+{
+  size_t nobjread;
+
+if (memsrc)
+{
+  if (memlen < size * nobj)
+	error
+
+  memcpy (ptr, memsrc, size * nobj))
+  memlen -= size * nobj;
+}
+else
+{
+  nobjread = fread(ptr, size, nobj, stream);
+
+  if (nobjread != nobj)
+    {
+      sprintf(gSdifErrorMess, "Sdiffread %d", ftell(stream));
+      _SdifError(eEof, gSdifErrorMess);
+    }
+}
+
+  return nobjread;
+}
+
+
+From SdifFGet.c:
+
+
+size_t
+SdifAddTypes (SdifFileT *SdifF, char *typedefs)
+{
+  int            CharEnd, NbOpenBrace;
+  size_t         SizeR = 0;
+  SdifSignature  TypeOfType = 0;
+  FILE          *file;
+  
+
+  SdifSetMemStream (typedefs);
+  
+  while( (CharEnd = SdiffGetSignature(file, &TypeOfType, &SizeR)) != 0 )
+    {      
+      switch (TypeOfType)
+        {
+        case e1MTD :
+          SizeR += SdifFGetOneMatrixType(SdifF, Verbose);
+          break;
+        case e1FTD :
+          SizeR += SdifFGetOneFrameType(SdifF, Verbose);
+          break;
+        default :
+          sprintf(gSdifErrorMess, "Wait '%s' or '%s' : '%s'",
+                  SdifSignatureToString(e1MTD),
+                  SdifSignatureToString(e1FTD),
+                  SdifSignatureToString(TypeOfType));
+          _SdifFileMess(SdifF, eSyntax, gSdifErrorMess);
+          break;
+        }
+      TypeOfType = 0;
+    }
+  
+  SdifSetMemStream (NULL);
+
+  if (TypeOfType != 0)
+    {
+      _SdifFileMess(SdifF, eSyntax, SdifSignatureToString(TypeOfType));
+      return SizeR;
+    }
+  
+  return SizeR;
+}
+
+
+
+
+This doesn't work, since very often reading is done by fgetc:
+
+wayan:~/src/SDIF/sdif>grep fget *.c
+SSdifFRead.c:  while ((c = fgetc(SdifF->Stream) == (int)' ') && (!feof(SdifF->Stream)))
+SdifRWLowLevel.c:      c = fgetc(fr);
+SdifRWLowLevel.c:      c=fgetc(fr);
+SdifRWLowLevel.c:      c = fgetc(fr); 
+SdifRWLowLevel.c:             c=fgetc(fr);
+SdifRWLowLevel.c:  while ( isspace(c= fgetc(fr)) )
+SdifRWLowLevel.c:  while( (c = fgetc(fr)) && (ncMax-- > 0) && (!feof(fr)))
+SdifRWLowLevel.c:         c = fgetc(fr);
+SdifRWLowLevel.c:  while( (c = fgetc(fr)) && (ncMax-- > 0) && (!feof(fr)))
+SdifRWLowLevel.c:  while(   (c = fgetc(fr)) && (!feof(fr))   )
+
+and EOF is checked by feof:
+
+wayan:~/src/SDIF/sdif>grep feof *.c
+SdifFRead.c:  while ((c = fgetc(SdifF->Stream) == (int)' ') && (!feof(SdifF->Stream)))
+SdifFRead.c:  if (feof(SdifF->Stream))
+SdifFile.c:                && (!feof(SdifF->TextStream)))
+SdifRWLowLevel.c:  while ( isspace(c) && (!feof(fr)) );
+SdifRWLowLevel.c:  while ( (ncMax-- > 0) && (!feof(fr)) )
+SdifRWLowLevel.c:  if (feof(fr))
+SdifRWLowLevel.c:  while (isspace(c) && (!feof(fr)) );
+SdifRWLowLevel.c:  for(i=0; ((i<4) && (!feof(fr))) ; i++)
+SdifRWLowLevel.c:  if (feof(fr))
+SdifRWLowLevel.c:  if (feof(fr))
+SdifRWLowLevel.c:  while( (c = fgetc(fr)) && (ncMax-- > 0) && (!feof(fr)))
+SdifRWLowLevel.c:  if (feof(fr))
+SdifRWLowLevel.c:  while( (c = fgetc(fr)) && (ncMax-- > 0) && (!feof(fr)))
+SdifRWLowLevel.c:  if (feof(fr))
+SdifRWLowLevel.c:  while(   (c = fgetc(fr)) && (!feof(fr))   )
+SdifRWLowLevel.c:  if (feof(fr))
+
+
+
+
+===============================================================================
+writing
+===============================================================================
+
+
+
+SdifFOpen ("stdout")   
+? SdifFOpen ("udp://129.102.007.1:4711")
+?? SdifFOpen ("sdtp://129.102.007.1:4711:udp")
+
+SdifSetMemTarget (void *to);
+
+SdifFSetCurrFrameHeader ();
+SdifFWriteFrameHeader (SdifF *file);
+  SdifFSetCurrMatrixHeader ();
+  SdifFWriteMatrixHeader (SdifF *file);
+    SdifFWriteMatrixData 
+
+  ...
+  SdifFWritePadding
+
+SdifUpdateFrameHeader
+
+n = SdifGetMemSize ();	// tests memmaxsize
+
+
+
+static void *gSdifMemTarget = NULL;
+
+SdifSetMemTarget (void *to, size_t numbytes)
+{
+	gSdifMemTarget  = to;
+	memstart   = to;
+	memmaxsize = numbytes;
+}
+
+int SdifGetMemSize ()
+{
+	return (gSdifMemTarget - memstart);
+}
+
+
+- alt 1 -----------------------------------------------------------------------
+
+/* fwrite encapsule */
+size_t
+Sdiffwrite(void *ptr, size_t size, size_t nobj, FILE *stream)
+{
+  size_t nobjwrite;
+
+  if (gSdifMemTarget)
+  {
+#ifndef NDEBUG
+	if (gSdifMemTarget - memstart >= memmaxsize)
+		error...
+#endif
+
+#ifdef OPTIMIZED
+	switch (size * nobj)
+	{
+		case 1: * (SdifChar  *) gSdifMemTarget = * (SdifChar  *) ptr; break;
+		case 2: * (SdifUInt2 *) gSdifMemTarget = * (SdifUInt2 *) ptr; break;
+		case 4: * (SdifUInt4 *) gSdifMemTarget = * (SdifUInt4 *) ptr; break;
+		default: memcpy (gSdifMemTarget, ptr, size * nobj); break;
+	}
+#else
+	memcpy (gSdifMemTarget, ptr, size * nobj);
+#endif
+	gSdifMemTarget += size * nobj;
+  }
+  else
+  { 
+  nobjwrite = fwrite(ptr, size, nobj, stream);
+  if (nobjwrite != nobj)
+    {
+      sprintf(gSdifErrorMess, "Sdiffwrite %d", ftell(stream));
+      _SdifError(eEof, gSdifErrorMess);
+    }
+  }
+  return nobjwrite;
+}
+
+
+
+
+- alt 2 -----------------------------------------------------------------------
+
+
+typedef struct {
+	int (*write) (SdifFileT *file, void *data, size_t size, size_t nobj);
+	int (*read) (...);
+	int (*seek) (...);
+} SdifFunctionTable;
+
+
+- change SdiffRead<type> (FILE *, <type> *obj, int nobj) into:
+
+SdifFRead<type> (SdifFileT *file, <type> *obj, int nobj)
+{
+	file->FunctionTable->read (file, obj, sizeof (<type>), nobj);
+}
+--> Macro???  NO! trust compiler's automatic inlining!
+
+
+struct {
+	...
+	SdifIOFunctionTable *FunctionTable;
+	void *MemStart;		// given memory area
+	void *MemPtr;		// current read/write position
+	void *MemChunkStart;	// record start of frame/chunk
+	int   MemSize;		// bytes
+} SdifFileT;
+
+
+?SdifFSetFunctionTable ();
+?SdifFSetMemoryIO ();
+?SdifFOpenMemory (void *mem, filemode);
+
+predefined tables gSdif<mode>IOTable for modes:
+- file native
+- file swap
+- mem native
+- mem swap
+- text?
+
+
+SdifFOpen ("foo.sdif", eWrite)
+{
+	...
+
+  switch (gSdifMachineType)
+    {
+      
+    case eLittleEndian:
+    case eLittleEndian64:
+    case eLittleEndianLittleConst:
+    case eLittleEndianLittleConst64:
+	file->FunctionTable = &gSdifFileIOTableSwap;
+    default :
+	file->FunctionTable = &gSdifFileIOTableNative;
+    }  
+}
+
+
+?SdifFOpen ("mem", eWrite)
+	...
+	file->FunctionTable = &gSdifMemIOTable;
+
+

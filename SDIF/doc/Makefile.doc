@@ -1,0 +1,300 @@
+# $Id: Makefile.doc,v 3.1 2000-10-27 20:02:50 roebel Exp $
+#
+#               Copyright (c) 1998 by IRCAM - Centre Pompidou
+#                          All rights reserved.
+#
+#  For any information regarding this and other IRCAM software, please
+#  send email to:
+#                            manager@ircam.fr
+#
+#
+# Makefile	4. November 1998	Diemo Schwarz
+#
+# Makefile for automatic documentation.
+#
+# $Log: not supported by cvs2svn $
+# Revision 3.8  2000/08/27  15:21:22  schwarz
+# Added standards dir, local install option when on installhost.
+#
+# Revision 3.7  2000/08/22  16:34:16  schwarz
+# Added tutorial.
+#
+# Revision 3.6  2000/08/07  15:12:04  schwarz
+# Cocoon is installed for groups now, more docs.
+#
+# Revision 3.5  2000/07/19  18:10:13  schwarz
+# Added todo section to internal doc.
+#
+# Revision 3.4  1999/10/07  15:22:10  schwarz
+# Added trademark notice in index.
+#
+# Revision 3.3  1999/08/26  15:29:23  schwarz
+# Cocoon (3.2) works only on fresh dir.
+# Simplified installation: Don't rely on make on install host (and
+# that all the generating programs work there), but generate locally,
+# then copy on install host and postprocess cocoon, replacing local links.
+#
+# Revision 3.2  1999/04/30  13:45:53  schwarz
+# Don't blurp horrible perl code, rather lightly put decent
+# "Gendoc from to" message.
+#
+# Revision 3.1  1999/03/14  10:54:42  virolle
+# SdifStdErr add
+#
+# Revision 2.3  1999/01/21  16:36:23  schwarz
+# Beefed up the SDIF library user manual.  It now has the sections
+# User Manual		(as before, but with navigating toc frame and
+# 			 crosslinked to the function reference)
+# Function Reference	(automatic cocoon doc with navigating toc)
+# Tutorial		(coming soon, a quick introduction to get started)
+# Utilities		(description of the utility programs coming with
+# 			 the library)
+#
+# Revision 2.2  1999/01/06  14:50:13  schwarz
+# Automatic Cocoon documentation of the sdif library in one single web
+# page.  It comes in two flavours: intern and extern.  Intern
+# describes ALL functions and data structures, extern describes only
+# the API that users of the library should use.
+#
+# Revision 2.1  1998/12/21  18:26:48  schwarz
+# Inserted copyright message.
+#
+# Revision 2.0  1998/11/29  11:20:51  virolle
+# english documentation for SDIF norm.
+#
+# Revision 1.1  1998/11/10  14:56:40  schwarz
+# Added makefile to generate cocoon documentation.
+#
+
+# web pages are accessible from INSTALLHOST and to be placed to INSTALLDIR
+INSTALLHOST	= maelzel
+INSTALLDIR	= /usr/local/www/ircam/equipes/analyse-synthese/sdif
+INSTALLURLBASE	= /equipes/analyse-synthese/sdif
+
+# files and directories to copy to webserver
+INSTALLSRC	= Makefile $(wildcard *.html) $(INSTALLDIRS)
+INSTALLDIRS	= pics standard extern intern
+
+
+# these are all overriden when installing
+HERE		= $(subst /a/,/net/,$(PWD))
+ABS_ROOT	= $(HERE)/..
+WEBBASE		= $(HERE)
+URLBASE		= $(HERE)
+
+# ($* is what matches % in a pattern rule)
+COCOONDIR	= $*/cocoon
+WEBROOT		= $(WEBBASE)/$(COCOONDIR)
+URLROOT		= $(URLBASE)/$(COCOONDIR)
+#INSTALLURL	= cocoon
+INSTALLURL	= $(INSTALLURLBASE)/$(COCOONDIR)
+#		  http://www.ircam.fr/$(INSTALLURLBASE)/$(COCOONDIR)
+
+COCOON		= cocoon	# /u/formes/schwarz/bin/$(ARCH)/cocoon
+PREPROC		= gcc -E -P -ansi -x c 
+INSTALLHTML	= perl -pi -e '$$c+=s|(href="*)$(URLROOT)|$$1$(INSTALLURL)|ig;'\
+			   -e 'END { print STDERR "$$c substitutions\nof   $(URLROOT)\nwith $(INSTALLURL)\n"; }'
+
+ifneq ($(HOST), $(INSTALLHOST))
+	rsh	= rsh $(INSTALLHOST)
+	sep	= \;
+else
+	rsh	=
+	sep	= ;
+endif
+
+makedependency	= # Makefile # when changing preprocessor options
+headerdir	= $(ABS_ROOT)/sdif
+headerfiles	= $(wildcard $(headerdir)/*.h)	# same as $(shell ls .../*.h)
+
+matlabdlarch 	= download/sdif-matlab.tar.gz
+matlabdldir	= $(HOME)/src/formesutils/matlab
+matlabdlbase	= loadsdif writesdif
+matlabdlfiles	= $(foreach sufx,m mexaxp mexlx,$(matlabdlbase:%=%.$(sufx))) \
+		  loadsdiffile.m loadsdifflat.m sdifexist.m
+
+VPATH		= pics intern extern
+
+.PHONY:		tutorial
+
+%.html:		%.tex
+		hevea -exec xxdate.exe $< -o $@
+
+all:		cocoon eframes iframes
+.PHONY:		cocoon eframes iframes abc new clean iclean eclean
+
+tut:		tutc tutorial reload
+tutc:		tutorial.c $(HOME)/src/SDIF/autoconf/SDIF-3.2.0/include/sdif.h
+		gcc -I$(HOME)/src/SDIF/autoconf/SDIF-3.2.0/include \
+		    -L$(HOME)/src/SDIF/autoconf/SDIF-3.2.0/sdif \
+		    $< -lsdif
+#		gcc -I/u/formes/include/sdif -L$(HOME)/lib/i686/Linux_2.2.5 \
+
+tutorial:	extern/tutorial-doc.html
+extern/tutorial-doc.html:	extern/tutorial-doc.tex
+
+#
+# cocoon
+#
+
+cocoon:		ext extern/alpha-toc.html int intern/alpha-toc.html 
+abc:		extern/alpha-toc.html intern/alpha-toc.html
+new:		clean all
+
+reload:
+		netscape -remote 'reload()'
+show:		showintern
+show%:		%
+		netscape -remote 'openURL(file:$(WEBROOT)/SDIF.html)'
+
+int: 		intern/cocoon/SDIF.lnk
+ext: 		extern/cocoon/SDIF.lnk
+
+
+intern-defs	= "-DSENTINELS=nosentinels" \
+		  "-DMEMBERSENTINEL=librarysentinel xxxnosentinelxxx" \
+		  "-DCUSTOMIZE="
+
+extern-defs	= "-DSENTINELS="  "-DMEMBERSENTINEL=membersentinel /*DOC:" \
+		  "-DCUSTOMIZE=librarysentinel xxxnosentinelxxx"
+
+
+%/cocoon/SDIF.lnk:	sdif.%.cocoon
+		$(RM) $(@D)/*		# cocoon 3.2 works only on clean dir
+		$(COCOON) -s -x $<	# -s: leave SDIF.lnk 
+
+# generate cocoon config file for one big web page with all defs
+sdif.%.cocoon:	sdif.src $(headerfiles) $(makedependency)
+		@echo Generating cocoon config file $@ from $<
+		$(PREPROC) $< -o $@  $($*-defs) \
+			-DWEBROOT=$(WEBROOT) -DURLROOT=$(URLROOT) \
+			"-DLIBRARY=library SDIF $(ABS_ROOT)/sdif/ ."
+
+
+# alphabetical list of all declarations
+
+ahead-extern	= <a href="$(URLROOT)/SDIF.html\#data" target=doc><strong>Data Structures</strong></a><br>\
+		  <a href="$(URLROOT)/SDIF.html\#functions" target=doc><strong>Function Prototypes</strong></a><br><br>
+
+ahead-intern	= $(ahead-extern)
+
+%/alpha-toc.html:	%/cocoon/SDIF.lnk Makefile
+		@echo Gendoc $< $@
+		@sort $< | perl -n -e '\
+		BEGIN { print qq|<body bgcolor=white>\n$(ahead-$*)\n\
+				 <strong>All Declarations:</strong><br>\n|; } \
+		END {print "</body>";} \
+		s|\\#|$(URLROOT)/SDIF.html#|; s|<a href=|<a target=doc href=|;\
+		split "%";  print "$$_[2]<br>\n"' >$@
+
+# make substitution file for anchor to replace function names in
+# SdifManuelDoc.html by bold link to def in cocoon doc 
+%/linkit.lnk:	%/cocoon/SDIF.lnk Makefile
+		@echo Gendoc $< $@
+		@perl -n -e '\
+		s|\\#|cocoon/SDIF.html\\#|;  s|<a href=|<a href=|; \
+		split "%";  print "%$$_[1]%<b>$$_[2]</b>%\n"' $< >$@
+
+
+#
+# augmented HTML
+#
+
+eindsuf		= by-subject alpha tutorial utilities
+iindsuf		= by-subject alpha todo
+emain		= $(eindsuf:%=extern/%-main.html)
+esec		= $(eindsuf:%=extern/%-sec.html)
+egenerated	= $(emain) $(esec) extern/by-subject-doc.html \
+				   extern/tutorial-doc.html
+imain		= $(iindsuf:%=intern/%-main.html)
+isuf		= $(iindsuf:%=intern/%-sec.html)
+igenerated	= $(imain) $(isuf) intern/by-subject-doc.html
+
+var-by-subject	= SUBJECT
+var-alpha	= ALPHA
+var-tutorial	= TUTORIAL
+var-utilities	= UTILITIES
+var-todo	= TODO
+doc-by-subject	= by-subject-doc.html
+doc-alpha	= cocoon/SDIF.html\#functions
+doc-tutorial	= tutorial-doc.html
+doc-utilities	= utilities-doc.html
+doc-todo	= ../Todo.html
+src-extern	= SdifManuelDoc.html
+src-intern	= SdifProgDoc.html
+
+selcolor	= bgcolor="yellow"
+ewarn		= 's"(\$$Id.*\$$)"DO NOT EDIT!!!\n     This file $@ is generated from $<\n     $$1\n     by the Makefile target eframes.\n";'
+
+
+eframes:	$(egenerated)
+iframes:	$(igenerated)
+
+# dependencies
+$(emain):	extern/default-main.html
+$(esec):	extern/default-sec.html
+$(imain):	intern/default-main.html
+$(isec):	intern/default-sec.html
+
+# avoid making (thus destroying) these source files!
+%/default-sec.html %/default-main.html:
+		@echo Preserving $@
+
+%-sec.html:	default-sec.html Makefile
+		@echo Gendoc $(@D)/$(<F) $@
+		@perl -p -e $(ewarn) -e 's!$(var-$(*F))!$(selcolor)!;' $(@D)/$(<F) >$@
+
+%-main.html:	default-main.html Makefile
+		@echo Gendoc $(@D)/$(<F) $@
+		@perl -p -e $(ewarn) -e 's!default-doc\.html!$(doc-$(*F))!;' \
+		     -e 's!default-(sec|toc)\.html!$(*F)-$$1.html!;' $(@D)/$(<F) >$@
+
+
+# use cocoon's anchor to replace function names in
+# SdifManuelDoc.html by bold link to def in cocoon doc 
+%/by-subject-doc.html:	%/linkit.lnk $(src-$*)
+		@echo Gendoc $(src-$(*F)) $@
+		@anchor $< $(src-$(*F)) $@
+		@perl -pi -e $(ewarn) -e 's|(src="*)pics|$$1../pics|;' $@
+
+
+#
+# Install
+#
+
+install:	$(INSTALLSRC) 
+		$(rsh) 	cp -rf $(INSTALLSRC:%=$(PWD)/%) $(INSTALLDIR) $(sep) \
+		  	$(MAKE) -C $(INSTALLDIR) URLBASE=$(URLBASE) \
+				postinst-intern postinst-extern \
+#				$(matlabdlarch)
+
+installdl:
+		$(rsh)  cp -rf $(PWD)/Makefile $(INSTALLDIR) $(sep) \
+		  	$(MAKE) -C $(INSTALLDIR) URLBASE=$(URLBASE) \
+#				$(matlabdlarch)
+
+
+# this is running on INSTALLHOST!
+postinst-%:
+		@echo ----- replacing links in $(INSTALLDIR)/$*
+		@find $(INSTALLDIR)/$* -name \*.html -print \
+		| xargs $(INSTALLHTML) 
+
+#$(matlabdlarch): download $(matlabdlfiles:%=$(matlabdldir)/%)
+#		tar cvf - -C $(matlabdldir) $(matlabdlfiles) | gzip -9 >$@
+
+#
+# Misc
+#
+
+clean:		eclean iclean
+		rm -f intern/cocoon/* extern/cocoon/* sdif.*.cocoon
+
+eclean:
+		rm -f $(egenerated)
+
+iclean:
+		rm -f $(igenerated)
+
+download:
+		mkdir -p $@

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+
+<dictionary title="">
+	<suite name="Standard Suite" code="CoRe">
+                <classes>       
+			<class name="application" code="capp" description="An application program">
+                                <elements>
+                                        <element type="document">
+                                                <accessor style="name"/>
+                                        </element>
+                                </elements>
+                        </class>
+			<class name="document" code="docu" description="A Document">
+                                <properties>
+                                        <property name="name" code="pnam" type="international string" description="the title of the document" />
+                                        <property name="modified" code="imod" type="boolean" description="Has the document been modified since the last save?"  />
+                                </properties>
+                        </class>
+		</classes> 
+		<commands>
+			<command name="open" code="coreopen" description="Opens an object.">
+				<direct-parameter type="object" description="the object to open"/>
+			</command>
+		</commands>
+	</suite>
+</dictionary>

@@ -1,0 +1,69 @@
+#!/bin/sh 
+
+if [ "$SDIFTYPES" = "" ] ;then
+ echo SDIF not defined
+ exit 1
+fi
+
+if [  -x ../tools/sdiftotext ]; then
+SDIFTOTEXT=../tools/sdiftotext
+TOSDIF=../tools/tosdif
+fi
+
+if [  -x ../tools/sdiftotext-debug ]; then
+SDIFTOTEXT=../tools/sdiftotext-debug
+TOSDIF=../tools/tosdif-debug
+fi
+
+if [ "$SDIFTOTEXT" = "" -o "$TOSDIF" = "" ]; then
+  echo Programs sdiftotext of tosdif  not found
+  exit 1
+fi
+
+# prefix for exes
+if [ "$1" == -p ]; then
+    shift
+    SDIFTOTEXT="$1 $SDIFTOTEXT"
+    TOSDIF="$1 $TOSDIF"
+    shift
+fi
+
+
+Files_Txt_Dir=$srcdir/files/txt
+Files_Sdif_Dir=./files/sdif
+Files_Txt_Sdif_Txt_Dir=./files/txtw
+Files_Txt_Sdif_Txt_Sdif_Dir=./files/sdifw
+
+sleep 1 # Wait one second
+echo
+echo \*************************************************************************
+echo "***    Convert txt->sdif, txt->sdif->txt and txt->sdif->txt->sdif     ***"
+echo \*************************************************************************
+echo
+for namein in $Files_Txt_Dir/*.txt; do
+    base=`basename $namein`
+    echo
+    echo \*********
+    echo "* File: *" $base
+    echo \*********
+    echo
+    if [ "$base" = "t.txt" -o "$base" = "t2.txt" ];then
+       echo \***********************************************************
+       echo "****   BEWARE : $base intentionally produces an Error "
+       echo \***********************************************************
+       echo 
+    fi
+    nameout=$Files_Sdif_Dir/$base.sdif
+    base=`basename $nameout`
+    nameresult=$Files_Txt_Sdif_Txt_Dir/$base.txt
+    base=`basename $nameresult`
+    sdifnameout=$Files_Txt_Sdif_Txt_Sdif_Dir/$base.sdif
+    echo "txt->sdif"
+    $TOSDIF -i $namein -o $nameout
+    echo "txt->sdif->txt"
+    $SDIFTOTEXT -i $nameout -o $nameresult
+    echo "txt->sdif->txt->sdif"
+    $TOSDIF -i $nameresult -o $sdifnameout
+done
+
+echo

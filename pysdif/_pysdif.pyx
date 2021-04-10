@@ -29,7 +29,7 @@ cdef extern from "string.h":
 
 import os.path
 import platform
-import numpy
+import numpy as np
 cimport numpy as c_numpy
 from numpy cimport ndarray, npy_intp
 import logging
@@ -391,7 +391,13 @@ cdef class FrameTypeDefinition:
     cdef readonly list components
     
     def __init__(self, signature, components):
+        """
+        Args:
+            signature (str): the signature of the frame
+            components (list[Component]): a list of components
+        """
         assert isinstance(signature, (str, bytes))
+        assert len(signature) == 4
         assert isinstance(components, list)
         assert all(isinstance(c, Component) for c in components)
         self.signature = asbytes(signature)
@@ -440,6 +446,7 @@ def predefined_frametypes():
     Returns a dict (framesig: components)
     """
     return SDIF_PREDEFINEDTYPES['frametypes']
+
 
 def predefined_matrixtypes():
     """
@@ -589,6 +596,9 @@ cdef class Matrix:
     See the methods 'get_data' and 'copy' for a better
     explanation of how to make the data in the Matrix 
     persistent
+
+    Args:
+        source (SdifFile): the source sdiffile this matrix belongs to
     """
     #cdef SdifMatrixHeaderT *header
     cdef SdifFileT *source_this
@@ -703,10 +713,19 @@ cdef class FrameR:
     Access the matrices by iterating on the frame, or calling 
     next(frame). 
 
+    Args:
+        source: the sidffile this frame belongs to
+
+    ## Example
+    
+    ```python
+
     for frame in sdiffile:
         print(frame.signature, frame.time)
         for matrix in frame:
             print(matrix.)
+    
+    ```
     """
     cdef SdifFrameHeaderT *header
     cdef SdifFile source
@@ -803,18 +822,24 @@ cdef class FrameR:
 
         Raises StopIteration when there are no more matrices
 
-        Example:
+        ## Example
+
+        ```python
 
         frame = next(sdiffile)
         while True:
             sig, data = frame.get_matrix()
             print(data)
 
+        ```
+
         This is the same as:
 
+        ```python
         frame = next(sdiffile)
         for matrix in frame:
             print(matrix.get_data())
+        ```
         """
         matrix = self.__next__()
         return matrix.signature, matrix.get_data(copy=copy)
@@ -825,20 +850,22 @@ cdef class FrameW:
     FrameW : class to write frames to a SdifFile
     
     A FrameW is not created directly but is returned by sdiffile.new_frame(...)
-    
     After creating a new frame, you add matrices via:
 
-    framew.add_matrix(signature, numpy_array)
+        framew.add_matrix(signature, numpy_array)
     
-    After finishing adding matrices, .write must be called:
-    framew.write()
+    After finishing adding matrices, `.write` must be called:
+    
+        framew.write()
 
     Alternatively you can do:
 
+    ```python
     with sdiffile.new_frame(sig, time) as frame:
         frame.add_matrix(matrix_sig, data1) 
         frame.add_matrix(matrix_sig, data2)
         ...
+    ```
 
     There is no need to call .write in this case
     """
@@ -875,7 +902,7 @@ cdef class FrameW:
         if data_array.ndim == 1:
             data_array.resize((data_array.shape[0], 1))
         self.signatures.append(asbytes(signature))
-        self.matrices.append(data_array)
+        self.matrices.append(np.ascontiguousarray(data_array))
         self.num_matrices += 1
         self.frame_size += SdifSizeOfMatrix(
             <SdifDataTypeET>(dtype_numpy2sdif(data_array.descr.type_num)),
@@ -895,18 +922,19 @@ cdef class FrameW:
         cdef c_numpy.ndarray matrix
         cdef int i
         SdifFSetCurrFrameHeader(self.sdiffile.this, self.signature, self.frame_size, 
-            self.num_matrices, self.streamID, self.time)
+                                self.num_matrices, self.streamID, self.time)
         fsz = SdifFWriteFrameHeader(self.sdiffile.this)
         for i in range(self.num_matrices):
             matrix_sig = str2sig(self.signatures[i])
             matrix = self.matrices[i]
             dtype = dtype_numpy2sdif(matrix.descr.type_num)
             fsz += SdifFWriteMatrix(self.sdiffile.this, matrix_sig, 
-                <SdifDataTypeET>dtype, 
-                matrix.shape[0], matrix.shape[1],   # rows, cols
-                matrix.data)
+                                    <SdifDataTypeET>dtype, 
+                                    matrix.shape[0], matrix.shape[1],   # rows, cols
+                                    matrix.data)
         self._written = 1
         self.sdiffile.write_status = eSdifMatrixData
+
 
 cdef FrameW FrameW_new(SdifFile sdiffile, SdifSignature sig,
                        SdifFloat8 time, SdifUInt4 streamID=0):
@@ -929,10 +957,14 @@ cdef class SdifFile:
     """
     SdifFile(filename, mode="r")
 
-    filename: path to a sdif file
-    mode: "r":read, "w": write or "rw"
+    Args:
+        filename: path to a sdif file
+        mode: "r":read, "w": write or "rw"
 
-    ## To read a sdiffile ##
+
+    ## Example 1: read a sdiffile 
+
+    ```python
 
     s = SdifFile("mysdif.sdif")
     for frame in s:
@@ -940,9 +972,11 @@ cdef class SdifFile:
         for matrix in frame:
             numpyarray = matrix.get_data()
             print(numpyarray)
+    ```
 
     With the low-level interface:
 
+    ```
     s = SdifFile("mysdif.sdif")
     while True:
         s.frame_read_header()
@@ -951,8 +985,11 @@ cdef class SdifFile:
         print(s.frame_time())
         for idx in range(s.frame_num_matrix()):
             print(s.matrix_read_data())
+    ```
 
-    ## To write a sdiffile ##
+    ## Example 2: write a sdiffile
+
+    ```python
 
     insdif = SdifFile("mysdif.sdif")
     outsdif = SdifFile("outsdif.sdif", "w").clone_definitions(insdif)
@@ -963,6 +1000,9 @@ cdef class SdifFile:
             for m in inframe:
                 outframe.add_matrix(m.signature, m.get_data())
     outsdif.close()
+    
+    ```
+    
     """
     cdef SdifFileT *this
     cdef readonly int eof
@@ -1375,16 +1415,18 @@ cdef class SdifFile:
         """
         Read the data of the current matrix as a numpy array
         
-        * If the matrix-header was not read, it is read here
-          The matrix signature cam be retrieved via sdiffile.curr_matrix_signature()
-        * If data was already read, it is wrapped as a numpy array
-          and returned.
-        * If copy is False, the array is referencing the data read and 
-          is only valid as long as no new matrix is read.
-          To keep the array for longer, use copy=True or call .copy() on the array:
+        If the matrix-header was not read, it is read here
+        The matrix signature cam be retrieved via sdiffile.curr_matrix_signature()
+        
+        If data was already read, it is wrapped as a numpy array and returned.
+        
+        If copy is False, the array is referencing the data read and 
+        is only valid as long as no new matrix is read.
+        To keep the array for longer, use `copy=True` or call `.copy()` on the array:
 
-          tmparray = sdiffile.matrix_read_data()
-          myarray = tmparray.copy() 
+            tmparray = sdiffile.matrix_read_data()
+            myarray = tmparray.copy() 
+
         """
         cdef int status = self.matrix_status
         cdef size_t bytesread
@@ -1425,12 +1467,14 @@ cdef class SdifFile:
     
     def matrix_skip(self):
         """
-        Low level Interface.
-        Skip the matrix altogether. 
+        Low level Interface. Skip the matrix altogether. 
 
-        NB: this CAN be called after having read the header, in which
+        !!! note
+
+            this CAN be called after having read the header, in which
             case only the data is skipped, otherwise the matrix is
             skipped altogether
+        
         """
         if self.this.CurrFramH == NULL:
             raise NoFrame("matrix_skip: no current frame")
@@ -1477,6 +1521,10 @@ cdef class SdifFile:
         """
         Read the next frame, returns a Frame or None if no more frames left.
         
+        ## Example
+
+        ```python
+
         sdif = SdifFile("mysdif.sdif")
 
         while True:
@@ -1484,10 +1532,15 @@ cdef class SdifFile:
             if frame is None: break
             print(frame.time)
 
+        ```
+
         This is the same as:
 
+        ```python
         for frame in sdif:
             print(frame.time)
+        ```
+
         """
         self._next_frame()
         return self.frame if self.eof == 0 else None
@@ -1609,9 +1662,12 @@ cdef class SdifFile:
         """
         Adds a matrix type to this Sdif
 
-        * column_names: two possible formats
-            - sdiff.add_matrix_type("1ABC", "Column1, Column2")
-            - sdiff.add_matrix_type("1ABC", ["Column1", "Column2"])
+        Args:
+            column_names: the names of the columns of this matrix
+
+        There are two possible formats for the column names:
+            * `sdiff.add_matrix_type("1ABC", "Column1, Column2")` or
+            * `sdiff.add_matrix_type("1ABC", ["Column1", "Column2"])`
         
         See also: add_frame_type
         """
@@ -1630,25 +1686,37 @@ cdef class SdifFile:
         Adds a frame type to this sdif. A frame is defined by a signature
         and a list of possible matrices. 
 
-        NB1: A frame type defines which matrix types are allowed in it.
-             The matrices mentioned in the frame type MUST be defined
-             via `add_matrix_type`.
-
-        NB2: A frame can have multiple matrices in it, so when defining
-             a frame-type, you need to pass a sequence of possible
-             matrices.
-
-        signature: a 4-char string
-        components: a list of components, where each component is a string
-                    of the sort "{Signature} {Name}", like 
-                    ["1NEW NewMatrix", "1FQ0 New1FQ0"]    
-                             
-        Example: Add a new frame type 1NEW, with a 1NEW matrix type
+        Args:
+            signature: a 4-char string
+            components: a list of components, where each component is a string
+                of the sort `"{Signature} {Name}"`, like `["1NEW NewMatrix", "1FQ0 New1FQ0"]`    
         
-        >> sdiffile.add_frame_type("1NEW", ["1NEW NewMatrix"])
-        >> sdiffile.add_matrix_type("1NEW", "Column1, Column2")
+        !!! note 
+
+            A frame type defines which matrix types are allowed in it.
+            The matrices mentioned in the frame type MUST be defined
+            via `add_matrix_type`.
+
+        !!! note
+
+            A frame can have multiple matrices in it, so when defining
+            a frame-type, you need to pass a sequence of possible
+            matrices.
+
         
-        See also: add_matrix_type
+        ## Example
+
+        Add a new frame type 1NEW, with a 1NEW matrix type
+        
+        ```python
+
+        sdiffile.add_frame_type("1NEW", ["1NEW NewMatrix"])
+        sdiffile.add_matrix_type("1NEW", "Column1, Column2")
+        
+        ```
+
+        ### See also
+        * `add_matrix_type`
         """
         cdef SdifFrameTypeT *ft = FrameType_create(signature, components)
         if ft == NULL:
@@ -1662,7 +1730,9 @@ cdef class SdifFile:
 
         Clone the frame and matrix type definitions of source_sdiffile
         
-        NB: This function must be called before any frame has been written
+        !!! note
+
+            This function must be called before any frame has been written
         """
         if not(self.this.Mode == eWriteFile or self.this.Mode == eReadWriteFile):
             raise IOError("This function is only possible for SdifFiles opened in write mode")
@@ -1679,16 +1749,23 @@ cdef class SdifFile:
 
         Clone the NVT from source (an open SdifFile)
         
-        NB: If you do not plan to midify the type definitions included
+        !!! note
+        
+            If you do not plan to midify the type definitions included
             in the source file, it's better to call 'clone_definitions', which
             clones everything but the data, so you can do
         
-            source_sdif = SdifFile("in.sdif")
-            new_sdif = SdifFile("out.sdif", "w")
-            new_sdif.clone_definitions(source_sdif)
-            for frame in old_sdif:
-                new_frame = new_sdif.new_frame(frame.signature, frame.time)
-                ... etc ...
+        ## Example
+
+        ```python    
+        source_sdif = SdifFile("in.sdif")
+        new_sdif = SdifFile("out.sdif", "w")
+        new_sdif.clone_definitions(source_sdif)
+        for frame in old_sdif:
+            new_frame = new_sdif.new_frame(frame.signature, frame.time)
+            # ... etc ...
+
+        ```
         """
         for nvt in source.get_NVTs():
             self.add_NVT(nvt)
@@ -1700,9 +1777,16 @@ cdef class SdifFile:
         Clone both NVT(s) and frame and matrix definitions from source,
         so after calling this function you can start creating frames
 
-        Returns: self
+        Args:
+            source: the sdiffile to clone definitions from
+        
+        Returns: 
+            self
 
-        Example:
+
+        ## Example
+
+        ```python
 
         infile = SdifFile("myfile.sdif")
         outfile = SdifFile("outfile.sdif", "w").clone_definitions(infile)
@@ -1710,6 +1794,8 @@ cdef class SdifFile:
             with outfile.new_frame(inframe.signature) as outframe:
                 matrixsig, data = inframe.get_one_matrix_data()
                 outframe.add_matrix(matrixsig, data)
+        
+        ```
         """
         if not(self.this.Mode == eWriteFile or self.this.Mode == eReadWriteFile):
             raise IOError("This function is only possible for SdifFiles opened in write mode")
@@ -1721,12 +1807,17 @@ cdef class SdifFile:
         """
         Clone all the frames in source which are included in 
         
-        * source: the SdifFile to clone from
-        * signatures_to_clone: a seq. of signature, or None to clone all
+        Args:
+            source: the SdifFile to clone from
+            signatures_to_clone: a seq. of signature, or None to clone all
         
-        NB: the use case for this function is when you want to
+        
+        !!! note
+
+            the use case for this function is when you want to
             modify some of the metadata but leave the data itself
             unmodified
+        
         """
         if not(self.this.Mode == eWriteFile or self.this.Mode == eReadWriteFile):
             raise IOError("This function is only possible for SdifFiles opened in write mode")
@@ -1791,15 +1882,23 @@ cdef class SdifFile:
         """
         create a new frame with the given signature and at the given time
         
+        ## Example
+        
+        ```python
         new_frame = sdiffile.new_frame('1SIG', time_now)
         new_frame.add_matrix(...)
         new_frame.write()
-        
-        if you know that you will write only one matrix, you can call
+        ```
+
+        if you know that you will write only one matrix, you can call:
+
+        ```python
         
         sdiffile.new_frame_one_matrix(frame_sig, time_now, matrix_sig, data)
         
-        and this will do the same as the three method calls above
+        ```
+        
+        ... and this will do the same as the three method calls above
         """
         # ask for a new frame means that we are through with
         # defining the global header (ascii chunks) so verify that
@@ -1817,9 +1916,12 @@ cdef class SdifFile:
         This method creates the frame, creates a new matrix
         in the frame and writes it to disk, all at once
         
-        NB: use this method when you want to create a frame which
-        contains only one matrix, like a 1TRC frame. It is more efficient
-        than calling new_frame, add_matrix, write (see method 'new_frame')
+        !!! note
+
+            use this method when you want to create a frame which
+            contains only one matrix, like a 1TRC frame. It is more efficient
+            than calling new_frame, add_matrix, write (see method 'new_frame')
+        
         """
         if not(self.this.Mode == eWriteFile or self.this.Mode == eReadWriteFile):
             raise IOError("This function is only possible for SdifFiles opened in write mode")
@@ -1831,11 +1933,12 @@ cdef class SdifFile:
         )
         SdifFSetCurrFrameHeader(self.this, str2sig(asbytes(frame_sig)), frame_size, 1, streamID, time)
         SdifFWriteFrameHeader(self.this)
-        SdifFWriteMatrix(self.this, 
-            str2sig(asbytes(matrix_sig)), 
-            <SdifDataTypeET>dtype_numpy2sdif(data_array.descr.type_num),
-            data_array.shape[0], data_array.shape[1],   # rows, cols
-            data_array.data)
+        if not data_array.flags.c_contiguous:
+            data_array = np.ascontiguousarray(data_array)
+        SdifFWriteMatrix(self.this, str2sig(asbytes(matrix_sig)), 
+                         <SdifDataTypeET>dtype_numpy2sdif(data_array.descr.type_num),
+                         data_array.shape[0], data_array.shape[1],   # rows, cols
+                         data_array.data)
         self.write_status = eSdifMatrixData
         
     # low level functions to print info

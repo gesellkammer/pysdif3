@@ -1,0 +1,55 @@
+#!/home/em/.virtualenvs/em9/bin/python
+import pysdif
+import numpy as np
+import argparse
+import sys
+import shutil
+
+assert sys.version_info.major >= 3 and sys.version_info.minor >= 6
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--dump", action="store_true", help="Dump data")
+parser.add_argument("sdiffile")
+args = parser.parse_args()
+
+width, height = shutil.get_terminal_size((80, 20))
+np.set_printoptions(suppress=True, precision=6, linewidth=width - 2)
+
+dump = args.dump
+sdiffile = args.sdiffile
+
+s = pysdif.SdifFile(sdiffile)
+s.print_all_ascii_chunks()
+t0 = float("inf")
+t1 = float("-inf")
+counts = {}
+numframes = 0
+nummatrices = 0
+for i, frame in enumerate(s):
+    t = frame.time
+    if t < t0:
+        t0 = t
+    elif t > t1:
+        t1 = t
+    numframes += 1
+    sig = frame.signature
+    if sig in counts:
+        counts[sig] += 1
+    else:
+        counts[sig] = 1
+    nummatrices += frame.num_matrices
+    if dump:
+        print(f"\nFrame #{i}, sig: {sig.decode('ascii')}, {frame.time:f} s")
+        for m in frame:
+            data = m.get_data()
+            print(f"  Matrix {m.signature.decode('ascii')}")
+            print(data)
+
+
+print(f"{t0:f}s - {t1:f}s     # frames: {numframes}    # matrices: {nummatrices}\n")
+for sig, num in counts.items():
+    print(f"    {sig.decode('ascii')}: {num} frames")
+
+
+
+
+    

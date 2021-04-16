@@ -22,7 +22,8 @@
 
 import sys
 from setuptools import setup, Extension
-
+import glob
+import os
 
 def get_version():
     d = {}
@@ -47,8 +48,18 @@ compile_args = [
     '-Wfatal-errors'
 ]
 
-include_dirs = []
+sources = []
+sdif_base = os.path.join("SDIF")
+sdif_sources = glob.glob(os.path.join(sdif_base, 'sdif', '*.c'))
+sdif_headers = glob.glob(os.path.join(sdif_base, 'include', '*.h'))
+sources.extend(sdif_sources)
 
+include_dirs = []
+include_dirs.append(os.path.join(sdif_base, 'include'))
+include_dirs.append(os.path.join(sdif_base, 'sdif'))
+
+
+"""
 if sys.platform == "windows":
     compile_args += ["-march=i686"]
 elif sys.platform == "linux":
@@ -57,6 +68,7 @@ elif sys.platform == "linux":
 elif sys.platform == "darwin":
     include_dirs.append("/usr/local/include/")
     library_dirs.append("/usr/local/lib")
+"""
 
 versionstr = "%d.%d.%d" % get_version()
 
@@ -86,9 +98,9 @@ setup(
     ext_modules = [
         Extension(
             'pysdif._pysdif',
-            sources = ['pysdif/_pysdif.pyx', 'pysdif/pysdif.pxd'],
+            sources = sources + ['pysdif/_pysdif.pyx', 'pysdif/pysdif.pxd'],
             include_dirs = include_dirs + ['pysdif', numpy_include()],
-            libraries = ['sdif'],
+            # libraries = ['sdif'],
             library_dirs = library_dirs,
             extra_compile_args = compile_args,
             extra_link_args = compile_args,

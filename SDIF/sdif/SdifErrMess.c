@@ -524,7 +524,7 @@ SdifDefaultErrorFunc (SdifErrorTagET errnum, SdifErrorLevelET errlev,
 {
     if (gSdifErrorOutputEnabled)
     {
-	fprintf(SdifStdErr, msg);
+	fprintf(SdifStdErr, "%s", msg);
 	fflush(SdifStdErr);
     }
 }
@@ -536,7 +536,7 @@ SdifDefaultWarningFunc (SdifErrorTagET errnum, SdifErrorLevelET errlev,
 {
     if (gSdifErrorOutputEnabled)
     {
-	fprintf(SdifStdErr, msg);
+	fprintf(SdifStdErr, "%s", msg);
 	fflush(SdifStdErr);
     } 
 }

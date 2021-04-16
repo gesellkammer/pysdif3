@@ -8,3 +8,4 @@ pysdif/_pysdif.c
 wheelhouse/
 SDIF/build
 SDIF/*.cache
+site

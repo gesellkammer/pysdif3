@@ -1,20 +1,25 @@
 
-# SDIF for Python
+# pysdif - SDIF support in Python
 
 * Author: Eduardo Moguillansky
 * Contact: `eduardo.moguillansky@gmail.com`
 
 
-This is a python wrapper to IRCAM's sdif library to read and write SDIF files.
-It consists of a core written in Cython and some other utilities written in Python.
+This is a python wrapper to IRCAM's [sdif library](http://sourceforge.net/projects/sdif/files/sdif/) 
+to read and write SDIF files. It consists of a core written in Cython and some other utilities 
+written in Python.
+
+------
 
 ## Build
 
-* Install the SDIF library at http://sourceforge.net/projects/sdif/files/sdif/
+* Install the SDIF library at <http://sourceforge.net/projects/sdif/files/sdif/>
 
 * `python3 setup.py install` 
 
 * This software is released under the GPL v3 license.
+
+------
 
 ## Introduction
 
@@ -64,7 +69,7 @@ import numpy as np
 sdif = SdifFile("rbep.sdif", "w")
 
 # Add some metadata. This is optional
-sdif.add_NVT({'creator': 'pysdif3'})
+sdif.add_NVT({"creator": "pysdif3"})
 
 # Add any matrix definitions. In this case we add only one definition
 # This is a matrix named "RBEP" with 6 columns
@@ -103,5 +108,8 @@ sdif.close()
 
 ```
 
+------
+
 ## Reference
 
+See [reference](reference.md). Most functionality is available via the class [SdifFile](classes/SdifFile.md)

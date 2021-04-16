@@ -9,13 +9,13 @@ version: 2
 # formats:
 #    - pdf
 
-#python:
-#   version: 3.7
-#   install:
-#   - requirements: requirements.txt
-#   setup_py_install: true
+python:
+  version: 3.8
+  install:
+  - requirements: docs/requirements.txt
+  # setup_py_install: true
 
 version: 2
 
 mkdocs:
- configuration: mkdocs.yml
+  configuration: mkdocs.yml

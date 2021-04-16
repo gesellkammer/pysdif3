@@ -44,6 +44,7 @@ for frame in sdif:
 
 
 ## Methods
+
 ### \_\_init\_\_
 
 

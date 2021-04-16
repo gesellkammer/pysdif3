@@ -1,12 +1,16 @@
+from __future__ import annotations
 from ._pysdif import *
 import os
-import numpy 
+import numpy as np
+from typing import Union as U, Dict, List, Tuple
+import tempfile
 
 
-def as_sdiffile(s):
+def as_sdiffile(s: U[str, SdifFile]) -> SdifFile:
     """
-    s: a path to a sdif or a SdifFile, in which case a new SdifFile
-       is opened with the original path.
+    Args:
+        s: a path to a sdif or a SdifFile, in which case a new SdifFile
+           is opened with the original path.
 
     NB: the original sdif or SdifFile is not modified
     """
@@ -17,9 +21,14 @@ def as_sdiffile(s):
     return SdifFile(s)
 
 
-def convert_1TRC_to_RBEP(sdiffile, metadata=None):
+def convert_1TRC_to_RBEP(sdiffile: U[str, SdifFile], metadata:dict=None) -> None:
     """
-    Create a RBEP clone from this 1TRC file.
+    Create a RBEP clone from a 1TRC file.
+
+    Args:
+        sdiffile: a SdifFile or the path to a sdif file
+        metadata: any metadata to add to the RBEP file
+
     """
     sdiffile = as_sdiffile(sdiffile)
     filename = sdiffile.name
@@ -28,7 +37,7 @@ def convert_1TRC_to_RBEP(sdiffile, metadata=None):
     if metadata is not None:
         _update_NVTs(sdiffile, outfile, metadata)
 
-    def data_convert_1TRC_RBEP(d):
+    def data_convert_1TRC_RBEP(d: np.array):
         # normally, 1TRC matrices have index, freq, amp, phase
         # but Spear, for example, add columns to the 1TRC definition to 
         # store time offset
@@ -41,8 +50,8 @@ def convert_1TRC_to_RBEP(sdiffile, metadata=None):
         # be able to read them.
         num_rows = len(d)
         if num_rows > 0:
-            empty_rows = numpy.zeros((num_rows, 2), dtype=d.dtype)
-            out = numpy.hstack((d[:,:4], empty_rows))
+            empty_rows = np.zeros((num_rows, 2), dtype=d.dtype)
+            out = np.hstack((d[:,:4], empty_rows))
             if not out.flags.contiguous:
                 out = out.copy()
             return out
@@ -57,7 +66,7 @@ def convert_1TRC_to_RBEP(sdiffile, metadata=None):
     o.close()
 
 
-def asbytes(s):
+def _asbytes(s: U[bytes, str]) -> bytes:
     if isinstance(s, bytes):
         return s
     elif isinstance(s, str):
@@ -66,34 +75,40 @@ def asbytes(s):
         raise TypeError("s should be bytes or str")
 
 
-def matrixtypes_for_predefined_frametype(sig):
+def matrixtypes_for_predefined_frametype(sig: str) -> Dict[str, List[str]]:
     """
-    Given a predefined frametype, return the matrix definitions
+    Given a predefined frametype, return a list of matrix definitions
     included in the frame definition
+
+    Args:
+        sig: the signature, a 4-byte string
+
+    Returns:
+        the matrix definitions possible within the given frame
     """
-    components = predefined_frametypes_get(sig)
+    components = _predefined_frametypes_get(sig)
     if not components:
         raise KeyError("Frametype not found")
-    matrixsignatures = {asbytes(component.split()[0]) for component in components}
+    matrixsignatures = {_asbytes(component.split()[0]) for component in components}
     allmatrixtypes = predefined_matrixtypes()
     d = {matrixsig:allmatrixtypes.get(matrixsig) for matrixsig in matrixsignatures}
     return d
 
 
-def predefined_frametypes_get(sig):
-    return SDIF_PREDEFINEDTYPES['frametypes'].get(asbytes(sig))
+def _predefined_frametypes_get(sig: str):
+    return SDIF_PREDEFINEDTYPES['frametypes'].get(_asbytes(sig))
 
 
-def frametypes_used(sdiffile):
+def frametypes_used(sdiffile: str) -> Set[str]:
     """
     Find all the frametypes used in this sdiffile
 
-    * sdiffile: the path to a sdif file
-    * Returns:  a set of signatures. 
+    Args:
+        sdiffile (str): the path to a sdif file
 
-    NB: to find the components of a frame, do
+    Returns:
+        the set of frame signatures present in the given file
 
-    predefined_frametypes_get(signature)
     """
     f = as_sdiffile(sdiffile)
     signatures = set()
@@ -103,25 +118,24 @@ def frametypes_used(sdiffile):
     return signatures
 
 
-def add_type_definitions(infile, outfile, metadata=None):
+def add_type_definitions(infile: str, outfile: str, metadata: Dict[str, str]=None
+                         ) -> None:
     """
     Writes predefined types explicitely
 
-    infile: the path to a .sdif file
-    outfile: it can be the same as infile
-    metadata: a dictionary with metadata to be added to
-              the metadata already present
+    Args:
+        infile: the path to a .sdif file
+        outfile: it can be the same as infile
+        metadata: a dictionary with metadata to be added to the metadata already present
 
-    Will add the type definitions to the file so that it can be read 
-    without a modified SdifTypes.STYP 
+    Will add the type definitions to the file so that it can be read without a 
+    modified `SdifTypes.STYP` 
     """
-    # frametypes = frametypes_used(infile)
-    # infile = SdifFile(infile)
     insdif = as_sdiffile(infile)
     definedFrametypes = {ftd.signature: ftd.components 
                          for ftd in insdif.get_frame_types()}
     frametypesUsed = frametypes_used(infile)
-    undefinedFrameSignatures = {asbytes(sig) for sig in frametypesUsed 
+    undefinedFrameSignatures = {_asbytes(sig) for sig in frametypesUsed 
                                 if sig not in definedFrametypes}
     globalFrametypes = predefined_frametypes()
     globalMatrixtypes = predefined_matrixtypes()
@@ -135,7 +149,7 @@ def add_type_definitions(infile, outfile, metadata=None):
                            "found in the predefined types".format(sig=framesig))
         for componentstr in components:
             matrixsig, descr = componenstr.split()
-            columns = globalMatrixtypes.get(asbytes(matrixsig))
+            columns = globalMatrixtypes.get(_asbytes(matrixsig))
             assert columns is not None
             matricesToBeAdded.append((matrixsig, columns))
     print(framesToBeAdded, matricesToBeAdded)
@@ -147,87 +161,82 @@ def add_type_definitions(infile, outfile, metadata=None):
     outsdif.close()
 
     
-def repair_RBEP(sdiffile, metadata=None):
+def repair_RBEP(sdiffile: str, metadata:Dict[str, str]=None) -> None:
     """
-    add the type definitions to a RBEP file as written by, for example, loris
-    in the same step you can update the metadata of the sdif file
+    Add the type definitions to a RBEP file
+
+    Some libraries (loris, for example), use RBEP frame types/matrix types 
+    without including the definition in the sdif file. This function
+    clones a given sdif file and ensures that it has all needed 
+    definitions
     """
     assert SdifFile(sdiffile).signature == "RBEP"
     return add_type_definitions(sdiffile, metadata=metadata, inplace=True)
 
         
-def write_metadata(sdif_filename, metadata={}, inplace=True):
+def write_metadata(sdif_filename: str, metadata:Dict[str, str], outfile: str=None 
+                   ) -> None:
     """
-    produce a copy of the sdif file with the metadata given. if there was any metadata
-    already defined in the source file, it will be overwritten.
+    Add metadata to a sdif file
+
+    Produce a copy of the sdif file with the metadata given. If there was any 
+    metadata already defined in the source file, it will be overwritten.
+    If no outfile is given, the sdif file is modified in place
+
+    Args:
+        sdif_filename: the filename of the source sdif file
+        outfile: the outfile to generate, or None to modify the source file in place
+        matadata: the metadata to add
     
     """
-    suffix = "-M"
-    insdif = SdifFile(sdif_filename)
-    if not inplace:
-        outsdif = SdifFile(os.path.splitext(sdif_filename)[0] + suffix + ".sdif", 'w')
+    if outfile is None:
+        inplace = True
+        outfile = tempfile.mktemp(suffix=".sdif")
     else:
-        import tempfile
-        outsdif = SdifFile(tempfile.mktemp(), 'w')
+        inplace = False
+
+    insdif = SdifFile(sdif_filename)
+    outsdif = SdifFile(outfile, "w")
     outsdif.add_NVT(metadata)
-    # and now, clone everything
     outsdif.clone_type_definitions(insdif)
     outsdif.clone_frames(insdif)
-    infile = insdif.name
-    outfile = outsdif.name
     outsdif.close()
     insdif.close()
     if inplace:
         os.remove(infile)
-        os.rename(outfile, infile)
+        os.rename(outfile, sdif_filename)
 
         
-def update_metadata(sdiffile, metadata, inplace=True):
+def update_metadata(sdiffile: str, metadata: Dict[str, str], outfile: str=None):
     """
-    update the metadata of the given sdiffile. any name already present in 
-    the original file with be updated with the new value, new names will
-    be added. other name-value pairs will be left untouched.
+    Update the metadata of the given sdiffile. 
+
+    Any key already present in the original file will be updated with the 
+    new value, new keys will be added. Other key: value pairs will be left 
+    untouched.
     
-    this is the same as the 'update' method in python:
-    
-    a = {...}
-    a.update({...})
-    
-    NB: only the first NVT is taken into consideration, if present,
-    other NVTs are passed untouched.
+    !!! note 
+
+        Only the first NVT is taken into consideration. Other NVTs, if present,
+        are left untouched.
     
     """
-    suffix = "-M"
-    insdif = as_sdiffile(sdiffile)
-    if not inplace:
-        outsdif = SdifFile(os.path.splitext(sdif_filename)[0] + suffix + ".sdif", 'w')
+    if outfile is None:
+        inplace = True
+        outfile = tempfile.mktemp(suffix=".sdif")
     else:
-        import tempfile
-        outsdif = SdifFile(tempfile.mktemp(), 'w')
+        inplace = False
+
+    insdif = SdifFile(sdif_filename)
+    outsdif = SdifFile(outfile, "w")
     _update_NVTs(insdif, outsdif, metadata)
     outsdif.clone_type_definitions(insdif)
     outsdif.clone_frames(insdif)
-    infile = insdif.name
-    outfile = outsdif.name
     outsdif.close()
     insdif.close()
     if inplace:
         os.remove(infile)
-        os.rename(outfile, infile)
-
-        
-def get_metadata(sdiffile):
-    """
-    returns a python dict with the metadata defined in sdiffile
-    """
-    metadata = as_sdiffile(sdiffile).get_NVTs()
-    if len(metadata) == 1:
-        return metadata[0]
-    return metadata
-
-    
-def get_signature(sdiffile):
-    return as_sdiffile(sdiffile).signature
+        os.rename(outfile, sdif_filename)
 
     
 def _update_NVTs(insdif, outsdif, metadata):
@@ -237,7 +246,7 @@ def _update_NVTs(insdif, outsdif, metadata):
         outsdif.add_NVT(nvt)
 
         
-def time_range(sdiffile):
+def time_range(sdiffile: str) -> Tuple[float, float]:
     """
     Returns the first and last times of all frames in this sdiffile
     """
@@ -251,7 +260,7 @@ def time_range(sdiffile):
     return t0, t1
     
 
-def check_matrix_exists(sdiffile, frame_sig, matrix_sig):
+def check_matrix_exists(sdiffile: str, frame_sig: str, matrix_sig: str) -> bool:
     sdiffile = SdifFile(sdiffile)
     for frame in sdiffile:
         if frame.signature == frame_sig:

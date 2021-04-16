@@ -36,7 +36,7 @@ def main(destfolder: str):
     
     clsnames = [doctools.fullname(cls).split(".")[-1] for cls in clss]
     clsNameToClass = {n:c for n, c in zip(clsnames, clss)}
-    clsNameToPath = {n: f"classes/{n}.md" for n in clsnames}
+    clsNameToPath = {n: f"classes/{n}.md" for i, n in enumerate(clsnames)}
 
     for clsname in clsnames:
         cls = clsNameToClass[clsname]
@@ -48,6 +48,8 @@ def main(destfolder: str):
     funcs, classes, modules = findComponents(pysdif, exclude=exclude)
     funcsdocstr = doctools.generateDocsForFunctions(funcs, renderConfig=renderConfig, title = "Functions", 
                                                     startLevel=2)
+
+
 
     # Layout
 
@@ -63,6 +65,12 @@ def main(destfolder: str):
     s = "\n\n".join(blocks)
     referencemd = os.path.join(destfolder, "reference.md")
     open(referencemd, "w").write(s)
+
+    funcs, classes, modules = findComponents(pysdif.tools, exclude=exclude)
+    print(funcs)
+    toolsdocs = doctools.generateDocsForFunctions(funcs, renderConfig=renderConfig, title = "Tools", 
+                                                  startLevel=2)
+    open(os.path.join(destfolder, "tools.md"), "w").write(toolsdocs)
 
     
 if __name__ == "__main__":

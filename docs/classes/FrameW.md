@@ -44,6 +44,7 @@ There is no need to call .write in this case
 
 
 ## Methods
+
 ### \_\_init\_\_
 
 

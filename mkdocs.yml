@@ -5,6 +5,16 @@ theme:
         # - navigation.tabs
         - navigation.sections
 
+nav:
+    - index.md
+    - reference.md
+    - tools.md
+    - classes:
+        - classes/SdifFile.md
+        - classes/FrameR.md
+        - classes/FrameW.md
+        - classes/Matrix.md
+
 extra_css:
     - stylesheets/extra.css
       

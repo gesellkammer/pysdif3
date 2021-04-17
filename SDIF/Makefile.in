@@ -368,8 +368,8 @@ CTAGS = ctags
 CSCOPE = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/sdif.pc.in \
 	$(srcdir)/sdif.spec.in AUTHORS COPYING ChangeLog INSTALL NEWS \
-	README compile config.guess config.sub install-sh ltmain.sh \
-	missing
+	README compile config.guess config.sub depcomp install-sh \
+	ltmain.sh missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 top_distdir = $(distdir)
 am__remove_distdir = \

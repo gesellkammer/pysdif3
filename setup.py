@@ -22,8 +22,47 @@
 
 import sys
 from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext as build_ext_orig
 import glob
 import os
+
+
+def configure_sdif_unix():
+    os.chdir("SDIF")
+    os.system("./configure")
+    os.chdir("..")
+
+
+def cmake_step():
+    os.makedirs("SDIF/build", exist_ok=True)
+    os.chdir("SDIF/build")
+    os.system("cmake ..")
+    os.chdir("../..")
+    assert os.path.exists("SDIF/build/sdifconfig/sdif.h")
+    assert os.path.exists("SDIF/build/sdifconfig/config.h")
+     
+
+def is_newer(file1, file2):
+    """ Return True if file1 is newer than file2 """
+    t1 = os.path.getmtime(file1)
+    t2 = os.path.getmtime(file2)
+    return t1 > t2
+    
+
+def cython_step():
+    if os.path.exists("pysdif/_pysdif.c") and not is_newer("pysdif/_pysdif.pyx", "pysdif/_pysdif.c"):
+        return
+    from Cython.Compiler.Main import compile
+    compilation_result = compile("pysdif/_pysdif.pyx")
+    print("Compiled cython file: ", compilation_result.c_file)
+
+
+class build_ext(build_ext_orig):
+    def run(self):
+        cython_step()
+        cmake_step()
+        super().run()
+
 
 def get_version():
     d = {}
@@ -39,6 +78,7 @@ class numpy_include(str):
     def __str__(self):
         import numpy
         return numpy.get_include()
+
 
 library_dirs = []
 
@@ -57,9 +97,9 @@ sources.extend(sdif_sources)
 include_dirs = []
 include_dirs.append(os.path.join(sdif_base, 'include'))
 include_dirs.append(os.path.join(sdif_base, 'sdif'))
+include_dirs.append(os.path.join(sdif_base, 'build', 'sdifconfig'))
 
 
-"""
 if sys.platform == "windows":
     compile_args += ["-march=i686"]
 elif sys.platform == "linux":
@@ -68,7 +108,7 @@ elif sys.platform == "linux":
 elif sys.platform == "darwin":
     include_dirs.append("/usr/local/include/")
     library_dirs.append("/usr/local/lib")
-"""
+
 
 versionstr = "%d.%d.%d" % get_version()
 
@@ -92,13 +132,17 @@ Topic :: Software Development :: Libraries :: Python Modules
 
 long_description = open("README.md").read()
 
+print(__name__)
+
 setup(
     name = "pysdif3",
     python_requires=">=3.8",
+    cmdclass={'build_ext': build_ext},
     ext_modules = [
         Extension(
             'pysdif._pysdif',
-            sources = sources + ['pysdif/_pysdif.pyx', 'pysdif/pysdif.pxd'],
+            # sources = sources + ['pysdif/_pysdif.pyx', 'pysdif/pysdif.pxd'],
+            sources = sources + ['pysdif/_pysdif.c'],
             include_dirs = include_dirs + ['pysdif', numpy_include()],
             # libraries = ['sdif'],
             library_dirs = library_dirs,
@@ -107,11 +151,11 @@ setup(
         )
     ],
     setup_requires = [
-        'numpy>=1.8',
-        'cython>=0.20'
+        'numpy >= 1.20',
+        'cython >= 0.29'
     ],
     install_requires = [
-        'numpy>=1.8',
+        'numpy >= 1.20',
     ],
     packages = ['pysdif'],
     package_dir  = {'pysdif': 'pysdif'},

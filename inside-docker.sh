@@ -11,14 +11,15 @@ set -e -x
 PROJ=$1
 
 # Put here any build instructions for c extensions
-pushd .
-cd /io/SDIF
-mkdir -p build
-cd build
-cmake ..
-make 
-make install
-popd
+#pushd .
+#cd /io/SDIF
+#rm -fr build
+#mkdir build
+#cd build
+#cmake ..
+#make 
+#make install
+#popd
 
 # Compile wheels. Customize the wildcard to match the desired python versions
 for PYBIN in /opt/python/cp3[8-9]*/bin; do

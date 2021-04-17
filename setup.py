@@ -144,6 +144,7 @@ setup(
             # sources = sources + ['pysdif/_pysdif.pyx', 'pysdif/pysdif.pxd'],
             sources = sources + ['pysdif/_pysdif.c'],
             include_dirs = include_dirs + ['pysdif', numpy_include()],
+            depends=sdif_headers,
             # libraries = ['sdif'],
             library_dirs = library_dirs,
             extra_compile_args = compile_args,
@@ -151,11 +152,12 @@ setup(
         )
     ],
     setup_requires = [
-        'numpy >= 1.20',
-        'cython >= 0.29'
+        'numpy>=1.10',
+        'cython>=0.25'
     ],
     install_requires = [
-        'numpy >= 1.20',
+        'numpy>=1.10',
+        'cython>=0.25'
     ],
     packages = ['pysdif'],
     package_dir  = {'pysdif': 'pysdif'},

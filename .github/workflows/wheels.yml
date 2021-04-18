@@ -34,4 +34,4 @@ jobs:
             TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
             twine upload --skip-existing wheelhouse/*.whl
-        continue-on-error: true
+        continue-on-error: false

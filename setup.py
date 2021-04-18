@@ -130,7 +130,7 @@ Topic :: Scientific/Engineering
 Topic :: Software Development :: Libraries :: Python Modules
 """
 
-long_description = open("README.md").read()
+long_description = open("README.rst").read()
 
 print(__name__)
 
@@ -168,7 +168,7 @@ setup(
     author = 'Eduardo Moguillansky',
     author_email = 'eduardo.moguillansy@gmail.com',
     long_description = long_description,
-    long_description_content_type="text/markdown",
+    # long_description_content_type="text/markdown",
     description = "Wrapper for the SDIF library for audio analysis",
     classifiers = [c for c in classifiers.split('\n') if c]
 )

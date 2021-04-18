@@ -24,9 +24,14 @@ jobs:
         run: |
             python -m cibuildwheel --output-dir wheelhouse
         # to supply options, put them in 'env', like:
-        # env:
-        #   CIBW_SOME_OPTION: value
+        env:
+            TWINE_USERNAME: __token__
+            TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
 
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
+      - name: upload wheel
+        run: |
+            twine upload --skip-existing wheelhouse/*.whl
+        continue-on-error: true

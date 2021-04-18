@@ -24,6 +24,9 @@ PROJ=$1
 # Compile wheels. Customize the wildcard to match the desired python versions
 for PYBIN in /opt/python/cp3[8-9]*/bin; do
     "${PYBIN}/pip" install --upgrade pip
+    if [ -e /io/build ]; then
+        rm -rf /io/build
+    fi
     "${PYBIN}/pip" wheel /io/ -w wheelhouse/
 done
 

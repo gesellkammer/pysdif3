@@ -9,3 +9,4 @@ wheelhouse/
 SDIF/build
 SDIF/*.cache
 site
+*~

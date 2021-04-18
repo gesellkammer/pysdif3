@@ -10,3 +10,5 @@ SDIF/build
 SDIF/*.cache
 site
 *~
+*.user
+build-*

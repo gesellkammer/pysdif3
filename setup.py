@@ -25,6 +25,7 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext as build_ext_orig
 import glob
 import os
+import shutil
 
 
 def configure_sdif_unix():
@@ -36,6 +37,8 @@ def configure_sdif_unix():
 def cmake_step():
     os.makedirs("SDIF/build", exist_ok=True)
     os.chdir("SDIF/build")
+    cmakebin = shutil.which('cmake')
+    assert cmakebin and os.path.exists(cmakebin), "Did not find cmake!"
     os.system("cmake ..")
     os.chdir("../..")
     assert os.path.exists("SDIF/build/sdifconfig/sdif.h")

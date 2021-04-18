@@ -33,5 +33,7 @@ jobs:
             TWINE_USERNAME: __token__
             TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
+            echo $TWINE_USERNAME
+            echo $TWINE_PASSWORD
             twine upload --skip-existing wheelhouse/*.whl
         continue-on-error: false

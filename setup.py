@@ -104,7 +104,12 @@ include_dirs.append(os.path.join(sdif_base, 'build', 'sdifconfig'))
 
 
 if sys.platform == "windows":
-    compile_args += ["-march=i686"]
+    compile_args += ["-march=i686", 
+                     "-D_CRT_SECURE_NO_DEPRECRATE=1", 
+                     "-D_SCL_SECURO_NO_WARNINGS=1",
+                     "-D_SECURE_SCL=0",
+                     "/arch:SSE"]
+    
 elif sys.platform == "linux":
     include_dirs.append("/usr/local/include/")
     library_dirs.append("/usr/local/lib")

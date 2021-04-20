@@ -85,11 +85,7 @@ class numpy_include(str):
 
 library_dirs = []
 
-compile_args = [
-    '-fno-strict-aliasing',
-    '-Werror-implicit-function-declaration',
-    '-Wfatal-errors'
-]
+compile_args = []
 
 sources = []
 sdif_base = os.path.join("SDIF")
@@ -108,12 +104,23 @@ if sys.platform == "windows":
                      "-D_CRT_SECURE_NO_DEPRECRATE=1", 
                      "-D_SCL_SECURO_NO_WARNINGS=1",
                      "-D_SECURE_SCL=0",
-                     "/arch:SSE"]
+                     #"/arch:SSE"
+                     ]
     
 elif sys.platform == "linux":
+    compile_args += [
+        '-fno-strict-aliasing',
+        '-Werror-implicit-function-declaration',
+        '-Wfatal-errors'
+    ]
     include_dirs.append("/usr/local/include/")
     library_dirs.append("/usr/local/lib")
 elif sys.platform == "darwin":
+    compile_args += [
+        '-fno-strict-aliasing',
+        '-Werror-implicit-function-declaration',
+        '-Wfatal-errors'
+    ]
     include_dirs.append("/usr/local/include/")
     library_dirs.append("/usr/local/lib")
 
@@ -139,8 +146,6 @@ Topic :: Software Development :: Libraries :: Python Modules
 """
 
 long_description = open("README.rst").read()
-
-print(__name__)
 
 setup(
     name = "pysdif3",

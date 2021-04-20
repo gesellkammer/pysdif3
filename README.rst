@@ -8,7 +8,7 @@ This is a python wrapper to IRCAM’s sdif library
 (http://sourceforge.net/projects/sdif/files/sdif/) to read and write
 SDIF files. It consists of a core written in Cython and some other
 utilities written in Python. The SDIF library is included in the package
-and built together with the python wrapper.
+and built together with the python wrapper. 
 
 **NB**: This software is released under the GPL v3 license.
 
@@ -21,6 +21,7 @@ Install
 
 
    pip install pysdif3
+
 
 --------------
 

@@ -8,10 +8,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [macOS-10.15, windows-2019]
-        os: [windows-2019]
+        os: [macOS-10.15, windows-2019]
+        # os: [windows-2019]
         # os: [ubuntu-20.04, windows-2019, macOS-10.15]
-        python-version: [3.9]
+        python-version: [3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
 
@@ -36,4 +36,4 @@ jobs:
             echo $TWINE_USERNAME
             echo $TWINE_PASSWORD
             twine upload --skip-existing wheelhouse/*.whl
-        continue-on-error: false
+        continue-on-error: true

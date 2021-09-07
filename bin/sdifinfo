@@ -1,4 +1,4 @@
-#!/home/em/.virtualenvs/em9/bin/python
+#!/usr/bin/env python
 import pysdif
 import numpy as np
 import argparse

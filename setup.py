@@ -175,6 +175,7 @@ setup(
     packages = ['pysdif'],
     package_dir  = {'pysdif': 'pysdif'},
     package_data = {'pysdif': ['data/*']},
+    include_package_data=True,
     scripts = ['bin/sdifinfo'],
     version  = versionstr,
     url = 'https://github.com/gesellkammer/pysdif',

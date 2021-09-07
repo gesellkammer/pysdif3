@@ -23,7 +23,7 @@ jobs:
 
       - name: Build wheels
         run: |
-            python setup.py build_ext
+            # python setup.py build_ext
             python -m cibuildwheel --output-dir wheelhouse
       - uses: actions/upload-artifact@v2
         with:

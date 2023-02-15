@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macOS-10.15, windows-latest, ubuntu-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
         # os: [windows-2019]
         # os: [ubuntu-20.04, windows-2019, macOS-10.15]
     steps:
@@ -30,7 +30,7 @@ jobs:
         env:
             # TWINE_USERNAME: __token__
             TWINE_USERNAME: Eduardo.Moguillansky
-            TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+            TWINE_PASSWORD: ${{ secrets.pypipass }}
         run: |
             echo $TWINE_USERNAME
             echo $TWINE_PASSWORD

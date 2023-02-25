@@ -164,10 +164,6 @@ setup(
             extra_link_args = compile_args,
         )
     ],
-    setup_requires = [
-        'numpy>=1.10',
-        'cython>=0.25'
-    ],
     install_requires = [
         'numpy>=1.10',
         'cython>=0.25'

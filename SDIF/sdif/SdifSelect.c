@@ -285,7 +285,7 @@ static int parsestring	  (SdifSelectContext *context);
 static int parsesig	  (SdifSelectValueT *valu,SdifSelectContext *context);
 static int parsecol	  (SdifSelectValueT *valu,SdifSelectContext *context);
 static int parse	  (int (*parseval) (SdifSelectValueT *valu, SdifSelectContext *context),
-			   SdifListP list, int range_allowed, char *name,SdifSelectContext *context);
+			   SdifListP list, int range_allowed, const char *name,SdifSelectContext *context);
 /*
 static int getint (SdifSelectValueT val);
 static double getreal (SdifSelectValueT val);
@@ -631,7 +631,7 @@ static int parsecol (SdifSelectValueT *valu, SdifSelectContext *context)
 /* Parse one element's list of values plus range or delta.  
    Return true if ok. */
 static int parse (int (*parseval) (SdifSelectValueT *valu, SdifSelectContext *context), SdifListP list, 
-		  int range_allowed, char *name, SdifSelectContext *context)
+		  int range_allowed, const char *name, SdifSelectContext *context)
 {
 #   define print_error1(msg, arg)	/* todo: use sdiferr... */       \
 	   fprintf (stderr,						 \
@@ -814,8 +814,8 @@ void SdifReplaceSelection (/*in*/  const char *selectionstr,
 
 void SdifPrintSelection (FILE *out, SdifSelectionT *sel, int options)
 {
-    char *tn [] = {" ", " any\n"}, 
-	 *nc [] = {"\n", ", "};
+    const char *tn [] = {" ", " any\n"}, 
+	       *nc [] = {"\n", ", "};
 
 #   define printinit(elem) \
     fprintf (out, "   %-6s:%s", #elem, tn [SdifListIsEmpty(sel->elem)]);\

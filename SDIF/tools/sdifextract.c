@@ -187,6 +187,8 @@
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#elif defined(_WIN32)
+#include <io.h> /* for isatty */
 #endif /* HAVE_UNISTD_H */
 
 #endif /* HAVE_CONFIG_H */

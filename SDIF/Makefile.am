@@ -238,7 +238,7 @@ $(PUBLISH_DIST):  $(distdir)
 		  -zip -r $@ $^
 
 # this is where the xcode project leaves the framework
-MAC_BUILD_DIR	  = macosxbuild/build/Deployment
+MAC_BUILD_DIR	  = macosxbuild/DerivedData/Build/Products/Development
 MAC_FRAMEWORK	  = SDIF.framework
 
 framework:	$(PUBLISH_FRAMEWORK)	
@@ -268,8 +268,8 @@ $(rpmdir):
 # use this to check if the distribution works, tag the cvs project, 
 # make a source distribution and rpm, and copy it to the web server
 pub:		distdir publish-sf
-publish pub-src: distcheck cvstag dist publish-sf
-publish-rpm:	distcheck cvstag dist rpm publish-sf
+publish pub-src: distcheck tag dist publish-sf
+publish-rpm:	distcheck tag dist rpm publish-sf
 
 # more files to publish (on server)
 EXTRA_PUBLISH     = README COPYING AUTHORS INSTALL ChangeLog ReleaseNotes # doc
@@ -297,7 +297,8 @@ publish-sf:	$(PUBLISH_DIST) $(PUBLISH_FRAMEWORK) ReleaseNotes
 CVSTAG	      = $(shell echo $(PACKAGE)_lib_version_$(VERSION) | tr . _)
 cvstag:
 		cd  @top_srcdir@;cvs tag -F $(CVSTAG)
+tag:
+		svn copy https://svn.code.sf.net/p/sdif/code/trunk/SDIF https://svn.code.sf.net/p/sdif/code/tags/$(CVSTAG)
 
-
-.PHONY:		grep doc ircam_deps test publish publish-ftp rpm cvstag
+.PHONY:		grep doc ircam_deps test publish publish-ftp rpm tag cvstag
 .PRECIOUS:	$(distdir)

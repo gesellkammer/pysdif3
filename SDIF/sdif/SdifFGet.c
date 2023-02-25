@@ -897,6 +897,13 @@ SdifFGetAllTypefromSdifString(SdifFileT *SdifF, SdifStringT *SdifString)
     int CharEnd;
     SdifSignature TypeOfType = 0;
 
+    /* check for alternative interpretation of 1TYP syntax with opening brace */
+    if (!SdifStringIsEOS(SdifString)  &&  SdifStringGetC(SdifString) == (unsigned) '{')
+	/* first char was '{' from Spear files, skip it */;
+    else
+	SdifStringUngetC(SdifString);	/* put it back */
+	
+    /* read until end of string or closing brace */
     while ((CharEnd = SdiffGetSignaturefromSdifString(SdifString, &TypeOfType))
 	   != (unsigned) '}'  &&  !SdifStringIsEOS(SdifString))
     {
@@ -914,7 +921,7 @@ SdifFGetAllTypefromSdifString(SdifFileT *SdifF, SdifStringT *SdifString)
 	  {
 	    char errorMess[_SdifStringLen];
 
-	    sprintf(errorMess, "Waiting for signature '%s' or '%s', read '%s' (end char %c=%d) at position %d, \nremaining input '%s'",
+	    sprintf(errorMess, "Waiting for signature '%s' or '%s', read '%s' (end char '%c'=%d) at position %d, \nremaining input '%s'",
 		    SdifSignatureToString(e1MTD),
 		    SdifSignatureToString(e1FTD),
 		    SdifSignatureToString(TypeOfType), CharEnd, CharEnd,

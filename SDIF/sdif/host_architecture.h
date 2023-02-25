@@ -187,10 +187,18 @@ typedef unsigned char       UInt8;
 typedef signed char         SInt8;
 typedef unsigned short      UInt16;
 typedef signed short        SInt16;
+#ifdef __LP64__
+/* The 64-bit data model used by Mac OS* X is known as LP64. It defines types as follows:
+    ints are 32 bit; longs, long-longs, and pointers are 64 bit */
+typedef unsigned int        UInt32;
+typedef signed int          SInt32;
+typedef unsigned int        FourCharCode;
+#else
 typedef unsigned long       UInt32;
 typedef signed long         SInt32;
-typedef unsigned char       Boolean;
 typedef unsigned long       FourCharCode;
+#endif 
+typedef unsigned char       Boolean;
 typedef char*               Ptr;
 typedef unsigned char       Str255[256];
 typedef unsigned char *     StringPtr;

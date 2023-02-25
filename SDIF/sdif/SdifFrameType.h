@@ -86,7 +86,7 @@
 #include "SdifHash.h"
 
 
-SdifComponentT* SdifCreateComponent (SdifSignature MtrxS, char *Name, SdifUInt4 Num);
+SdifComponentT* SdifCreateComponent (SdifSignature MtrxS, const char *Name, SdifUInt4 Num);
 void            SdifKillComponent   (SdifComponentT *Component);
 SdifFrameTypeT* SdifCreateFrameType (SdifSignature FramS, SdifFrameTypeT *PredefinedFrameType);
 
@@ -94,7 +94,7 @@ void            SdifKillFrameType               (SdifFrameTypeT *FrameType);
 SdifComponentT* SdifFrameTypeGetComponent_MtrxS (SdifFrameTypeT *FrameType, SdifSignature MtrxS);
 SdifComponentT* SdifFrameTypeGetComponent       (SdifFrameTypeT *FrameType, const char *NameC);
 SdifComponentT* SdifFrameTypeGetNthComponent    (SdifFrameTypeT *FrameType, SdifUInt4 NumC);
-SdifFrameTypeT* SdifFrameTypePutComponent       (SdifFrameTypeT *FrameType, SdifSignature MtrxS, char *NameC);
+SdifFrameTypeT* SdifFrameTypePutComponent       (SdifFrameTypeT *FrameType, SdifSignature MtrxS, const char *NameC);
 
 SdifFrameTypeT* SdifGetFrameType       (SdifHashTableT *FrameTypeHT, SdifSignature FramS);
 void            SdifPutFrameType       (SdifHashTableT *FrameTypeHT, SdifFrameTypeT *FrameType);

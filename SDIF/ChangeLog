@@ -1,3 +1,40 @@
+2023-01-10  Frederic Cornu <cornu@ircam.fr>
+
+	* include/sdif.h.in, sdif/SdifErrMess.c, sdif/SdifFile.c,
+	* sdif/SdifFrameType.c, sdif/SdifFrameType.h, sdif/SdifRWLowLevel.c,
+	* sdif/SdifSelect.c, sdif/SdifTest.c [r1881]:
+	Fix const errors with string literals, which is enforced by MSVC when
+	use C++20. Some are fixed by making parameters const, but some by
+	casting to char* (the behavior was already undefined anyway if changed)
+
+2022-10-21  Frederic Cornu <cornu@ircam.fr>
+
+	* SDIF/tools/querysdif.c:
+	Restore previous TextStream in PrintHeaders to prevent an attempt to
+	close stdout in SdifQuery
+
+	* SDIF/cmModules/SET_COMPILER_FLAGS.cmake, SDIF/test/CMakeLists.txt,
+	* SDIF/tools/CMakeLists.txt, SDIF/tools/sdifextract.c:
+	Add support for intel LLVM compiler (icx)
+
+2022-03-17  Frederic Cornu <cornu@ircam.fr>
+
+	* cmModules/SET_COMPILER_FLAGS.cmake:
+	Only set the default standard library for clang to libstdc++ if code can
+	actually be compiled with it (with recent compilers, the option is
+	accepted but does not work)
+
+2022-03-08  Frederic Cornu <cornu@ircam.fr>
+
+	* include/sdif.h.in:
+	Make SdifFrameTypeGetNbComponents, SdifFrameTypeGetComponentSignature
+        and SdifFrameTypeGetComponentName visible from outside shared library
+
+2022-03-07  Frederic Cornu <cornu@ircam.fr>
+
+	* include/sdif.h.in:
+	Make SdifMatrixTypeGetNbColumns visible from outside shared library
+
 2018-02-22  Frederic Cornu <cornu@ircam.fr>
 Version 3.11.6
 

@@ -379,7 +379,6 @@ SdifFOpen(const char* Name, SdifFileModeET Mode)
 {
   SdifFileT* SdifF;
 
-
   assert (gSdifInitialised  &&  "SDIF library not initialised!");
 
   SdifF = SdifMalloc(SdifFileT);
@@ -396,7 +395,7 @@ SdifFOpen(const char* Name, SdifFileModeET Mode)
 							     SdifF->Selection);
 
       if (SdifF->Name == NULL)
-	  SdifF->Name = "";
+	  SdifF->Name = (char*)"";
       if (SdifF->Name [0] == 0  ||  SdifStrEq (SdifF->Name, "-"))
 	  stdio = Mode == eReadFile		    ?  eBinaryModeStdInput
 						    :  eBinaryModeStdOutput;
@@ -797,7 +796,7 @@ void
 SdifTakeCodedPredefinedTypesfromString(SdifFileT *SdifF)
 {
     size_t SizeR = 0;
-    char *typesDefinition;
+    const char *typesDefinition;
     int result;
 
     SdifStringT *SdifString;
@@ -916,7 +915,7 @@ SdifFileT *gSdifPredefinedTypes  = 0;
 void
 SdifGenInit(const char *PredefinedTypesFile)
 {
-    char *PreTypesEnvVar=NULL;
+    const char *PreTypesEnvVar=NULL;
     char *local_types = NULL;
     int   use_default_file =0;
 

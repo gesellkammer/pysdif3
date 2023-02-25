@@ -388,7 +388,7 @@ SdifTestSignature(SdifFileT *SdifF, int CharEnd, SdifSignature Signature, const 
 
 
 int
-SdifTestCharEnd(SdifFileT *SdifF, int CharEnd, char MustBe, char *StringRead,
+SdifTestCharEnd(SdifFileT *SdifF, int CharEnd, char MustBe, const char *StringRead,
 		int ErrCondition, const char *Mess)
 {
     if ((unsigned) CharEnd != (unsigned) MustBe  ||  ErrCondition)

@@ -143,6 +143,7 @@ int		vall	  = 1,
 
 static int PrintHeaders (SdifFileT *file, void *userdata)
 {
+    FILE* oldstream = file->TextStream;
     file->TextStream = stdout;	/* SdifFPrint* functions need this */
 
     if (vall || vheader)
@@ -170,6 +171,8 @@ static int PrintHeaders (SdifFileT *file, void *userdata)
       SdifFPrintAllType(file);
       printf("\n");
     }
+
+    file->TextStream = oldstream;
 
     return vall || vdata;	/* continue reading data? */
 }

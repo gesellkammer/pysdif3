@@ -1283,7 +1283,7 @@ sdif_foralltypes (scan)
 
 
 int
-SdifSkipASCIIUntil(FILE* fr, size_t *NbCharRead, char *CharsEnd)
+SdifSkipASCIIUntil(FILE* fr, size_t *NbCharRead, const char *CharsEnd)
 {
   int c=0;
   int CharsEndLen;
@@ -1312,7 +1312,7 @@ SdifSkipASCIIUntil(FILE* fr, size_t *NbCharRead, char *CharsEnd)
 
 
 int
-SdifSkipASCIIUntilfromSdifString(SdifStringT *SdifString, size_t *NbCharRead, char *CharsEnd)
+SdifSkipASCIIUntilfromSdifString(SdifStringT *SdifString, size_t *NbCharRead, const char *CharsEnd)
 {
   int c=0;
   int CharsEndLen;

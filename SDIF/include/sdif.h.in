@@ -1879,7 +1879,7 @@ SDIF_API SdifMatrixDataT* SdifFrameDataGetComponentMatrixData(SdifHashTableT *Fr
 
 
 
-SDIF_API SdifComponentT* SdifCreateComponent (SdifSignature MtrxS, char *Name, SdifUInt4 Num);
+SDIF_API SdifComponentT* SdifCreateComponent (SdifSignature MtrxS, const char *Name, SdifUInt4 Num);
 SDIF_API void            SdifKillComponent   (SdifComponentT *Component);
 SDIF_API SdifFrameTypeT* SdifCreateFrameType (SdifSignature FramS, SdifFrameTypeT *PredefinedFrameType);
 
@@ -1888,7 +1888,7 @@ SDIF_API void            SdifKillFrameType               (SdifFrameTypeT *FrameT
 /**
  * Get number of matrix components defined in frame type. 
  */
-SdifUInt4 SdifFrameTypeGetNbComponents (SdifFrameTypeT *FrameType);
+SDIF_API SdifUInt4 SdifFrameTypeGetNbComponents (SdifFrameTypeT *FrameType);
 
 /** 
  * Access a frame type component definition by matrix component number (starting from 1).
@@ -1905,14 +1905,14 @@ SDIF_API SdifComponentT* SdifFrameTypeGetComponent_MtrxS (SdifFrameTypeT *FrameT
  */
 SDIF_API SdifComponentT* SdifFrameTypeGetComponent       (SdifFrameTypeT *FrameType, const char *NameC);
 
-SDIF_API SdifFrameTypeT* SdifFrameTypePutComponent       (SdifFrameTypeT *FrameType, SdifSignature MtrxS, char *NameC);
+SDIF_API SdifFrameTypeT* SdifFrameTypePutComponent       (SdifFrameTypeT *FrameType, SdifSignature MtrxS, const char *NameC);
 
 
 /** Get matrix signature of frame component definition */
-SdifSignature SdifFrameTypeGetComponentSignature (SdifComponentT *comp);
+SDIF_API SdifSignature SdifFrameTypeGetComponentSignature (SdifComponentT *comp);
 
 /** Get matrix role of frame component definition */
-char *SdifFrameTypeGetComponentName (SdifComponentT *comp);
+SDIF_API char *SdifFrameTypeGetComponentName (SdifComponentT *comp);
 
 
 /**
@@ -2501,7 +2501,7 @@ SDIF_API SdifMatrixTypeT* SdifMatrixTypeInsertTailColumnDef (SdifMatrixTypeT *Ma
 
 /*DOC: 
   Return number of columns defined for given matrix type. */
-SdifUInt4 SdifMatrixTypeGetNbColumns (SdifMatrixTypeT *mtype);
+SDIF_API SdifUInt4 SdifMatrixTypeGetNbColumns (SdifMatrixTypeT *mtype);
 
 /*DOC: 
   Get index (starting from 1) of the column given by NameCD (0 if not found) */
@@ -2801,8 +2801,8 @@ SDIF_API int SdiffGetStringWeakUntil(FILE* fr, char* s, size_t ncMax, size_t *Nb
 SDIF_API int SdiffGetStringWeakUntilfromSdifString(SdifStringT *SdifString, char* s,
                                           size_t ncMax, const char *CharsEnd);
 
-SDIF_API int SdifSkipASCIIUntil  (FILE* fr, size_t *NbCharRead, char *CharsEnd);
-SDIF_API int SdifSkipASCIIUntilfromSdifString  (SdifStringT *SdifString, size_t *NbCharRead, char *CharsEnd);
+SDIF_API int SdifSkipASCIIUntil  (FILE* fr, size_t *NbCharRead, const char *CharsEnd);
+SDIF_API int SdifSkipASCIIUntilfromSdifString  (SdifStringT *SdifString, size_t *NbCharRead, const char *CharsEnd);
 
 
 #if 0   /* for cocoon's eyes only */
@@ -3357,7 +3357,7 @@ SDIF_API SdifComponentT*  SdifTestComponent (SdifFileT* SdifF, SdifFrameTypeT *F
 
 SDIF_API int SdifTestSignature            (SdifFileT *SdifF, int CharEnd, SdifSignature Signature, const char *Mess);
 SDIF_API int SdifTestCharEnd              (SdifFileT *SdifF, int CharEnd, char MustBe,
-                                           char *StringRead, int ErrCondition, const char *Mess);
+                                           const char *StringRead, int ErrCondition, const char *Mess);
 
 
 SDIF_API int SdifTestMatrixTypeModifMode  (SdifFileT *SdifF, SdifMatrixTypeT *MatrixType);

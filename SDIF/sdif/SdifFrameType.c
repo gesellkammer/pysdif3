@@ -89,7 +89,7 @@
 
 
 SdifComponentT*
-SdifCreateComponent(SdifSignature MtrxS, char *Name, SdifUInt4 Num)
+SdifCreateComponent(SdifSignature MtrxS, const char *Name, SdifUInt4 Num)
 {
   SdifComponentT *NewComponent = NULL;
 
@@ -294,7 +294,7 @@ SdifFrameTypeGetNthComponent(SdifFrameTypeT *FrameType, SdifUInt4 NumC)
 SdifFrameTypeT*
 SdifFrameTypePutComponent(SdifFrameTypeT *FrameType,
                           SdifSignature MtrxS,
-                          char *NameC)
+                          const char *NameC)
 {
   SdifComponentT *NewComponent = NULL;
 

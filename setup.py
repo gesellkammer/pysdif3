@@ -149,7 +149,7 @@ long_description = open("README.rst").read()
 
 setup(
     name = "pysdif3",
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     cmdclass={'build_ext': build_ext},
     ext_modules = [
         Extension(

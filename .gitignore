@@ -12,3 +12,7 @@ site
 *~
 *.user
 build-*
+*.o
+.deps
+.libs
+*.lo

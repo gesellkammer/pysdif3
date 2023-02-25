@@ -1,0 +1,10 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: sdif
+Description: the Sound Description Interchange File Format library
+Version: 3.11.6
+Libs: -L${libdir} -lsdif  
+Cflags: -I${includedir} 

@@ -164,7 +164,11 @@
 #elif defined(__arm__)
 
 #     define HOST_ARCH_ARMv7				1
-#pragma message(compiling in armv7)
+
+#elif defined(__aarch64__)
+
+#     define HOST_ARCH_ARM64				1
+
 #endif
 
 

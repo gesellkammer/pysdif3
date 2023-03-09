@@ -1,3 +1,5 @@
+https://img.shields.io/badge/binary%20wheel-linux%20win64%20macos--x86--64%20macos--arm64-red
+
 SDIF for Python
 ===============
 

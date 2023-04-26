@@ -1,4 +1,7 @@
-.. image:: https://img.shields.io/badge/binary%20wheel-linux%20win64%20macos--x86--64%20macos--arm64-green
+|sh-month| |sh-wheel|
+
+.. |sh-month| image:: https://static.pepy.tech/badge/pysdif3/month
+.. |sh-wheel| image:: https://img.shields.io/badge/binary%20wheel-linux%20win64%20macos--x86--64%20macos--arm64-green
 
 SDIF for Python
 ===============

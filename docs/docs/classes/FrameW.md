@@ -1,4 +1,5 @@
 # FrameW
+
 ## 
 
 
@@ -37,28 +38,6 @@ with sdiffile.new_frame(sig, time) as frame:
 ```
 
 There is no need to call .write in this case
-
-
----------
-
-
-**Summary**
-
-
-
-| Property  | Description  |
-| :-------- | :----------- |
-| written | - |
-
-
-| Method  | Description  |
-| :------ | :----------- |
-| [add_matrix](#add_matrix) | Add a matrix to this Frame |
-| [write](#write) | Write the current frame to disk. |
-
-
----------
-
 
 **Attributes**
 

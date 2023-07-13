@@ -1,4 +1,5 @@
 # FrameR
+
 ## 
 
 
@@ -41,41 +42,20 @@ for frame in sdiffile:
 
 * **source** (`SdifFile`): the sidffile this frame belongs to
 
-
----------
-
-
-**Summary**
-
-
-
-| Property  | Description  |
-| :-------- | :----------- |
-| id | (int) The id of this frame |
-| matrix_idx | The index of the current matrix |
-| num_matrices | (int) The number of matrices in this frame |
-| numerical_signature | - |
-| signature | (str) The string signature of this frame |
-| size | (int) The size of this frame in bytes |
-| time | (float) The time of this frame |
-
-
-| Method  | Description  |
-| :------ | :----------- |
-| [get_matrix](#get_matrix) | Reads the next matrix entirely, returns (matrixsig, data) |
-
-
----------
-
-
 **Attributes**
 
 * **id**: (int) The id of this frame
+
 * **matrix_idx**: The index of the current matrix
+
 * **num_matrices**: (int) The number of matrices in this frame
+
 * **numerical_signature**
+
 * **signature**: (str) The string signature of this frame
+
 * **size**: (int) The size of this frame in bytes
+
 * **time**: (float) The time of this frame
 
 

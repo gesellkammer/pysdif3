@@ -1249,10 +1249,14 @@ cdef class SdifFile:
 
     @property
     def name(self):
+        """(str) The name of this sdif file"""
         return self.this.Name
 
     @property
     def mode(self):
+        """
+        (str) The mode in which this sdif file was opened ('r', 'w')
+        """
         return FILEMODE_MODE2STR[self.this.Mode]
     
     @property
@@ -1276,11 +1280,14 @@ cdef class SdifFile:
 
     @property 
     def prev_time(self): 
-        """(float)"""
+        """(float) The previous time"""
         return self.this.PrevTime
 
     @property
     def frame_pos(self):
+        """
+        (int) The current frame position
+        """
         return self.this.CurrFramPos
 
     def curr_matrix_size(self):
@@ -1456,6 +1463,12 @@ cdef class SdifFile:
         return bool(SdifFCurrMatrixIsSelected(self.this))
         
     def get_num_NVTs(self):
+        """
+        Get the number of NameValueTables defined in this sdif
+
+        Returns:
+            (int) The number of nvts in this sdiffile
+        """
         if SdifNameValuesLIsNotEmpty(self.this.NameValues):
             return SdifFNameValueNum(self.this)
         else:
@@ -1484,7 +1497,7 @@ cdef class SdifFile:
 
     def frame_read_header(self):
         """
-        ** Low level interface ** - Read the frame header.
+        Low level interface - Read the frame header.
 
         Returns the number of bytes read. If it reaches the
         end of file, self.eof is 1 and this function returns 0
@@ -1513,7 +1526,7 @@ cdef class SdifFile:
 
     def frame_skip_data(self):
         """
-        **Low level interface** - Skip frame and all its matrices
+        Low level interface - Skip frame and all its matrices
         """
         cdef size_t bytes_read = SdifFSkipFrameData (self.this)
         logger.debug("frame_skip_data: calling finalize_frame")
@@ -1543,7 +1556,7 @@ cdef class SdifFile:
 
     def matrix_read_header(self):
         """
-        **Low level interface** - Read the matrix header 
+        Low level interface - Read the matrix header
 
         Reads the matrix header (signature, number of rows and columns, etc.)
         Return the number of bytes read or 0 if no more matrices,
@@ -1576,7 +1589,7 @@ cdef class SdifFile:
     
     def matrix_skip_data(self):
         """
-        **Low-level Interface** - Skip the matrix data without reading it.
+        Low-level Interface - Skip the matrix data without reading it.
 
         !!! note
 
@@ -1615,6 +1628,13 @@ cdef class SdifFile:
     def matrix_read_data(self, copy=False):
         """
         Read the data of the current matrix as a numpy array
+
+        Args:
+            copy: if True, copy the matrix data. Otherwise, the data is only
+                valid until the next matrix is read.
+
+        Returns:
+            a numpy array representing the matrix
         
         If the matrix-header was not read, it is read here
         The matrix signature cam be retrieved via sdiffile.curr_matrix_signature()
@@ -1696,7 +1716,10 @@ cdef class SdifFile:
     
     def status(self):
         """
-        Returns a tuple (curr_frame_status, curr_matrix_index, curr_matrix_status)
+        The status of this sdiffile
+
+        Returns:
+            (tuple[int, int, int]) A tuple (curr_frame_status, curr_matrix_index, curr_matrix_status)
         """
         return self.frame_status, self.matrix_idx, self.matrix_status
     
@@ -2204,40 +2227,40 @@ cdef class SdifFile:
         
     # low level functions to print info
     def print_NVT(self):
-        """ **Low-Level Interface** """
+        """Low-Level Interface - Print the name value table """
         SdifFPrintAllNameValueNVT(self.this)
         
     def print_general_header(self):
-        """ **Low-Level Interface** """
+        """Low-Level Interface - Print the general header """
         cdef size_t n = SdifFPrintGeneralHeader(self.this)
         
     def print_all_ascii_chunks(self):
-        """ **Low-Level Interface** """
+        """Low-Level Interface - print all text chunks """
         SdifFPrintAllASCIIChunks(self.this)
         
     def print_all_types(self):
-        """ **Low-Level Interface** """
+        """Low-Level Interface - Print all types defined in this sdif file"""
         SdifFPrintAllType(self.this)
         
     def print_matrix_header(self):
-        """ **Low-Level Interface** """
+        """Low-Level Interface - Print the matrix header"""
         SdifFPrintMatrixHeader(self.this)
         
     def print_one_row(self):
-        """ **Low-Level Interface** """
+        """Low-Level Interface - print one row of the current matrix"""
         SdifFPrintOneRow(self.this)
         
     def print_frame_header(self):
-        """ **Low-Level Interface** """
+        """Low-Level Interface- Print the frame header """
         SdifFPrintFrameHeader(self.this)
         
     def print_all_stream_ID(self):
-        """ **Low-Level Interface** """
+        """Low-Level Interface - Print the ID of all streams """
         SdifFPrintAllStreamID(self.this)
     
     def frame_types_to_string(self):
         """
-        returns a string with all frame types
+        Returns a string with all frame types
         """
         cdef SdifStringT *sdifstr
         sdifstr = SdifStringNew()
@@ -2253,6 +2276,9 @@ cdef class SdifFile:
 
         Each FrameTypeDefinition is a FrameTypeDefinition(signature:bytes, components:list[Component])
         (a Component has the attributes signature:bytes, name:bytes, num:int)
+
+        Returns:
+            (list[FrameTypeDefinition]) A list of FrameTypeDefinition
         """
         return FrameTypesTable_to_list(self.this.FrameTypesTable)
         

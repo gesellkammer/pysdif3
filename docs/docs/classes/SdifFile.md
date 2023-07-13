@@ -1,4 +1,5 @@
 # SdifFile
+
 ## 
 
 
@@ -75,98 +76,24 @@ outsdif.close()
 * **filename** (`str`): path to a sdif file
 * **mode** (`str`): "r" = read, "w" = write, "rw" = read+write
 
-
----------
-
-
-**Summary**
-
-
-
-| Property  | Description  |
-| :-------- | :----------- |
-| eof | - |
-| frame_pos | (int) The current frame position |
-| is_seekable | (bool) Is this SdifFile seekable? |
-| mode | (str) The mode in which this sdif file was opened ('r', 'w') |
-| name | (str) The name of this sdif file |
-| numerical_signature | (int) Current signature as numerical signature |
-| pos | The last position read |
-| prev_time | (float) The previous time |
-| signature | (str) Current signature as 4-byte string |
-
-
-| Method  | Description  |
-| :------ | :----------- |
-| [__init__](#__init__) | - |
-| [add_NVT](#add_NVT) | The NVT (Name Value Table) is a place to put metadata about the file. |
-| [add_frame_type](#add_frame_type) | Adds a frame type to this sdif. |
-| [add_matrix_type](#add_matrix_type) | Adds a matrix type to this Sdif |
-| [add_predefined_frametype](#add_predefined_frametype) | Add a predefined frame type with corresponding matrix definitions |
-| [add_streamID](#add_streamID) | This method is only there for completion. |
-| [clone_NVTs](#clone_NVTs) | Clone the NVT (name:value table) from source (an open SdifFile) |
-| [clone_definitions](#clone_definitions) | Only for writing mode - Clone both NVT(s), frame and matrix definitions |
-| [clone_frames](#clone_frames) | Clone all the frames in source which are included in |
-| [clone_type_definitions](#clone_type_definitions) | Clone the frame and matrix type definitions of source_sdiffile |
-| [close](#close) | Close this SdifFile |
-| [curr_frame_available](#curr_frame_available) | SdifFile.curr_frame_available(self) |
-| [curr_frame_is_selected](#curr_frame_is_selected) | Return whether the current frame is selected. |
-| [curr_matrix_available](#curr_matrix_available) | SdifFile.curr_matrix_available(self) |
-| [curr_matrix_datatype](#curr_matrix_datatype) | Returns the datatype code (an int) or 0 if go current matrix |
-| [curr_matrix_is_selected](#curr_matrix_is_selected) | Return whether the current matrix is selected. |
-| [curr_matrix_signature](#curr_matrix_signature) | Get the string signature of the current matrix, or None if no current matrix |
-| [curr_matrix_size](#curr_matrix_size) | Returns the number of rows and number of columns in the current matrix |
-| [curr_signature](#curr_signature) | **Low-level interface** - Return the current frame's numerical signature |
-| [frame_id](#frame_id) | Get the id of the current frame, or -1 if no current frame |
-| [frame_num_matrix](#frame_num_matrix) | Get the number of matrices in current frame. |
-| [frame_numerical_signature](#frame_numerical_signature) | Return the num. signature of current frame, or -1 if no current frame |
-| [frame_read_header](#frame_read_header) | Low level interface - Read the frame header. |
-| [frame_signature](#frame_signature) | Return the str. signature of the current frame, or None if no current frame |
-| [frame_skip_data](#frame_skip_data) | Low level interface - Skip frame and all its matrices |
-| [frame_skip_rest](#frame_skip_rest) | Skipts the rest of the frame, so that a new frame can be read. |
-| [frame_time](#frame_time) | Get the time of the current frame, or -1 if no current frame |
-| [frame_types_to_string](#frame_types_to_string) | Returns a string with all frame types |
-| [get_NVTs](#get_NVTs) | Return a list with all defined NameValueTables |
-| [get_frame_types](#get_frame_types) | Returns a list of Frame Type Definitions (1FTD) |
-| [get_matrix_types](#get_matrix_types) | Get a list of matrix type definitions (1MTD) |
-| [get_num_NVTs](#get_num_NVTs) | Get the number of NameValueTables defined in this sdif |
-| [get_stream_IDs](#get_stream_IDs) | SdifFile.get_stream_IDs(self) |
-| [last_error](#last_error) | Returns (error_tag, error_level) or None if there is no last error |
-| [matrix_read_data](#matrix_read_data) | Read the data of the current matrix as a numpy array |
-| [matrix_read_header](#matrix_read_header) | Low level interface - Read the matrix header |
-| [matrix_skip](#matrix_skip) | Low level Interface. Skip the matrix altogether. |
-| [matrix_skip_data](#matrix_skip_data) | Low-level Interface - Skip the matrix data without reading it. |
-| [matrix_types_to_string](#matrix_types_to_string) | Returns a string with all matrix types |
-| [new_frame](#new_frame) | Create a new frame with given signature and at given time |
-| [new_frame_one_matrix](#new_frame_one_matrix) | Create a frame containing only one matrix and write it |
-| [next_frame](#next_frame) | Read the next frame, returns a Frame or None if no more frames left. |
-| [next_matrix](#next_matrix) | Read the next matrix header and return a Matrix with its data **still not read**. |
-| [print_NVT](#print_NVT) | Low-Level Interface - Print the name value table |
-| [print_all_ascii_chunks](#print_all_ascii_chunks) | Low-Level Interface - print all text chunks |
-| [print_all_stream_ID](#print_all_stream_ID) | Low-Level Interface - Print the ID of all streams |
-| [print_all_types](#print_all_types) | Low-Level Interface - Print all types defined in this sdif file |
-| [print_frame_header](#print_frame_header) | Low-Level Interface- Print the frame header |
-| [print_general_header](#print_general_header) | Low-Level Interface - Print the general header |
-| [print_matrix_header](#print_matrix_header) | Low-Level Interface - Print the matrix header |
-| [print_one_row](#print_one_row) | Low-Level Interface - print one row of the current matrix |
-| [rewind](#rewind) | Rewind the SdifFile. |
-| [status](#status) | The status of this sdiffile |
-| [write_all_ascii_chunks](#write_all_ascii_chunks) | **Low-level Interface** |
-
-
----------
-
-
 **Attributes**
 
 * **eof**
-* **frame_pos**: (int) The current frame position
+
+* **frame_pos**
+
 * **is_seekable**: (bool) Is this SdifFile seekable?
-* **mode**: (str) The mode in which this sdif file was opened ('r', 'w')
-* **name**: (str) The name of this sdif file
+
+* **mode**
+
+* **name**
+
 * **numerical_signature**: (int) Current signature as numerical signature
+
 * **pos**: The last position read
-* **prev_time**: (float) The previous time
+
+* **prev_time**: (float)
+
 * **signature**: (str) Current signature as 4-byte string
 
 
@@ -740,7 +667,7 @@ SdifFile.frame_read_header(self)
 ```
 
 
-Low level interface - Read the frame header.
+** Low level interface ** - Read the frame header.
 
 
 Returns the number of bytes read. If it reaches the
@@ -787,7 +714,7 @@ SdifFile.frame_skip_data(self)
 ```
 
 
-Low level interface - Skip frame and all its matrices
+**Low level interface** - Skip frame and all its matrices
 
 ----------
 
@@ -841,7 +768,7 @@ SdifFile.frame_types_to_string(self)
 ```
 
 
-Returns a string with all frame types
+returns a string with all frame types
 
 ----------
 
@@ -884,12 +811,6 @@ Returns a list of Frame Type Definitions (1FTD)
 Each FrameTypeDefinition is a FrameTypeDefinition(signature:bytes, components:list[Component])
 (a Component has the attributes signature:bytes, name:bytes, num:int)
 
-
-
-**Returns**
-
-&nbsp;&nbsp;&nbsp;&nbsp;(`list[FrameTypeDefinition]`) A list of FrameTypeDefinition
-
 ----------
 
 ## get\_matrix\_types
@@ -917,18 +838,12 @@ Get a list of matrix type definitions (1MTD)
 
 ```python
 
-SdifFile.get_num_NVTs(self)
+def get_num_NVTs(self) -> None
 
 ```
 
 
-Get the number of NameValueTables defined in this sdif
-
-
-
-**Returns**
-
-&nbsp;&nbsp;&nbsp;&nbsp;(`int`) The number of nvts in this sdiffile
+SdifFile.get_num_NVTs(self)
 
 ----------
 
@@ -991,12 +906,7 @@ myarray = tmparray.copy()
 
 **Args**
 
-* **copy**: if True, copy the matrix data. Otherwise, the data is only
-    valid until the next matrix is read.
-
-**Returns**
-
-&nbsp;&nbsp;&nbsp;&nbsp;a numpy array representing the matrix
+* **copy**:
 
 ----------
 
@@ -1010,7 +920,7 @@ SdifFile.matrix_read_header(self)
 ```
 
 
-Low level interface - Read the matrix header
+**Low level interface** - Read the matrix header
 
 
 Reads the matrix header (signature, number of rows and columns, etc.)
@@ -1060,7 +970,7 @@ SdifFile.matrix_skip_data(self)
 ```
 
 
-Low-level Interface - Skip the matrix data without reading it.
+**Low-level Interface** - Skip the matrix data without reading it.
 
 
 !!! note
@@ -1254,7 +1164,7 @@ SdifFile.print_NVT(self)
 ```
 
 
-Low-Level Interface - Print the name value table
+**Low-Level Interface**
 
 ----------
 
@@ -1268,7 +1178,7 @@ SdifFile.print_all_ascii_chunks(self)
 ```
 
 
-Low-Level Interface - print all text chunks
+**Low-Level Interface**
 
 ----------
 
@@ -1282,7 +1192,7 @@ SdifFile.print_all_stream_ID(self)
 ```
 
 
-Low-Level Interface - Print the ID of all streams
+**Low-Level Interface**
 
 ----------
 
@@ -1296,7 +1206,7 @@ SdifFile.print_all_types(self)
 ```
 
 
-Low-Level Interface - Print all types defined in this sdif file
+**Low-Level Interface**
 
 ----------
 
@@ -1310,7 +1220,7 @@ SdifFile.print_frame_header(self)
 ```
 
 
-Low-Level Interface- Print the frame header
+**Low-Level Interface**
 
 ----------
 
@@ -1324,7 +1234,7 @@ SdifFile.print_general_header(self)
 ```
 
 
-Low-Level Interface - Print the general header
+**Low-Level Interface**
 
 ----------
 
@@ -1338,7 +1248,7 @@ SdifFile.print_matrix_header(self)
 ```
 
 
-Low-Level Interface - Print the matrix header
+**Low-Level Interface**
 
 ----------
 
@@ -1352,7 +1262,7 @@ SdifFile.print_one_row(self)
 ```
 
 
-Low-Level Interface - print one row of the current matrix
+**Low-Level Interface**
 
 ----------
 
@@ -1384,13 +1294,7 @@ SdifFile.status(self)
 ```
 
 
-The status of this sdiffile
-
-
-
-**Returns**
-
-&nbsp;&nbsp;&nbsp;&nbsp;(`tuple[int, int, int]`) A tuple (curr_frame_status, curr_matrix_index, curr_matrix_status)
+Returns a tuple (curr_frame_status, curr_matrix_index, curr_matrix_status)
 
 ----------
 

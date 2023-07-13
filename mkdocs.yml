@@ -25,6 +25,7 @@ markdown_extensions:
     - pymdownx.superfences
     - admonition
     - def_list
+    - tables
 
 use_directory_urls: false
 

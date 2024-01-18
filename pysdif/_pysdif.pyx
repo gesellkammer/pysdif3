@@ -133,16 +133,18 @@ cdef inline int dtype_numpy2sdif(int dtype):
     elif dtype == c_numpy.NPY_ULONG : dtype = 0x0208
     return dtype
     
-cdef inline unsigned int str2sig (char *sig):
+cdef inline unsigned int bytes2sig(char *sig):
    return ((((<unsigned int>(sig[0])) & 0xff) << 24) | 
        (((<unsigned int>(sig[1])) & 0xff) << 16) | 
        (((<unsigned int>(sig[2])) & 0xff) << 8) | 
        ((<unsigned int>(sig[3])) & 0xff))
        
+
 # def signature2str(SdifSignature signature):
 #    return PyString_FromStringAndSize(SdifSignatureToString(signature), 4)
 
-cdef inline bytes sig2str(SdifSignature signature):
+
+cdef inline bytes sig2bytes(SdifSignature signature):
     cdef char* c_str = SdifSignatureToString(signature)
     cdef bytes out = c_str[:4]
     return out
@@ -150,15 +152,15 @@ cdef inline bytes sig2str(SdifSignature signature):
 
 def signature2str(int sig):
     """
-    Converts a numeric signature into a string signature
+    Converts a numeric signature into a byte string signature
 
     Args:
         sig (int): Numeric signature
 
     Returns:
-        (str) The string signature corresponding to the numeric signature
+        (bytes) The byte string signature corresponding to the numeric signature
     """
-    return sig2str(sig)
+    return sig2bytes(sig)
  
 
 def str2signature(s):
@@ -166,12 +168,13 @@ def str2signature(s):
     Converts a 4-byte string signature into a numeric signature
 
     Args:
-        s (str): a string of 4 characters 
+        s (bytes | str): a string of 4 characters
 
     Returns:
         (int) The numeric signature corresponding to the string signature
     """
-    return str2sig(asbytes(s))
+    return bytes2sig(asbytes(s))
+
 
 cdef inline ndarray _array_from_matrix_data_no_copy(SdifMatrixDataT *matrix):
     cdef SdifMatrixHeaderT *header = matrix.Header
@@ -179,6 +182,7 @@ cdef inline ndarray _array_from_matrix_data_no_copy(SdifMatrixDataT *matrix):
     dims[0] = <npy_intp>header.NbRow
     dims[1] = <npy_intp>header.NbCol
     return PyArray_SimpleNewFromData(2, dims, dtype_sdif2numpy(header.DataType), matrix.Data.Void)
+
 
 cdef inline ndarray _array_from_matrix_data_copy(SdifMatrixDataT *matrix): 
     cdef ndarray out
@@ -195,10 +199,12 @@ cdef inline bytes bytes_from_sdifstring(SdifStringT *s):
     cdef bytes out = s.str[:s.SizeW]
     return out
     
+
 # cdef inline PyString_from_SdifString(SdifStringT *s):
 #     """ convert a SdifStringT to a python string """
 #     return PyString_FromStringAndSize(s.str, s.SizeW)
     
+
 cdef SdifStringT *SdifString_from_PyString(s):
     cdef bytes s_bytes = asbytes(s)
     cdef char *c = s
@@ -206,6 +212,7 @@ cdef SdifStringT *SdifString_from_PyString(s):
     SdifStringAppend(sdifstr, c)
     return sdifstr
     
+
 cdef dict nvt_to_dict( SdifNameValueTableT *nvt ):
     cdef int i
     cdef SdifUInt4      iNV
@@ -224,6 +231,7 @@ cdef dict nvt_to_dict( SdifNameValueTableT *nvt ):
             table[name] = value
             pNV = pNV.Next
     return table
+
     
 cdef valuetables_to_dicts (SdifNameValuesLT *namevalues):
     """ create a list of dicts where each dict represents a value table """
@@ -233,6 +241,7 @@ cdef valuetables_to_dicts (SdifNameValuesLT *namevalues):
         namevalues.CurrNVT = <SdifNameValueTableT *>(SdifListGetNext(namevalues.NVTList))
         tables.append(nvt_to_dict(namevalues.CurrNVT))
     return tables
+
     
 cdef streamidtable_to_list(SdifStreamIDTableT *table):
     cdef unsigned int i
@@ -247,6 +256,7 @@ cdef streamidtable_to_list(SdifStreamIDTableT *table):
             streams.append(streamid_w)
             pID = pID.Next
     return streams
+
             
 cdef class StreamID:
     cdef SdifStreamIDT *this
@@ -278,15 +288,17 @@ cdef class StreamID:
             self.numid,
             self.source,
             self.treeway)            
+
         
 cdef StreamID_fromSdifStreadIDT(SdifStreamIDT *this):
     cdef StreamID out = StreamID(-1, None, None)  # create a wrapper
     out.this = this
     out.own_this = 0
     return out
+
     
 cdef SdifMatrixTypeT *MatrixType_create(signature, column_names):
-    cdef SdifSignature sig = str2sig(asbytes(signature))
+    cdef SdifSignature sig = bytes2sig(asbytes(signature))
     cdef SdifMatrixTypeT *mt = SdifCreateMatrixType(sig, NULL)
     for column_name in column_names:
         SdifMatrixTypeInsertTailColumnDef(mt, asbytes(column_name))
@@ -303,22 +315,23 @@ cdef SdifFrameTypeT *FrameType_create(signature, list components):
         + tuples(str_signature, matrix_role)
         + strings "{SIGN} {ROLE}", like "1TRC SinusoidalTracks"
     """
-    cdef SdifSignature sig = str2sig(asbytes(signature))
+    cdef SdifSignature sig = bytes2sig(asbytes(signature))
     cdef SdifFrameTypeT *ft = SdifCreateFrameType(sig, NULL)
     for component in components:
         if isinstance(component, Component):
-            SdifFrameTypePutComponent(ft, str2sig(component.signature), component.name)
+            SdifFrameTypePutComponent(ft, bytes2sig(component.signature), component.name)
         elif isinstance(component, tuple):
-            SdifFrameTypePutComponent(ft, str2sig(asbytes(component[0])), asbytes(component[1]))
+            SdifFrameTypePutComponent(ft, bytes2sig(asbytes(component[0])), asbytes(component[1]))
         elif isinstance(component, (str, bytes)):
             component_b = asbytes(component)
             component_sig, component_name = component_b.split()
-            SdifFrameTypePutComponent(ft, str2sig(component_sig), component_name)
+            SdifFrameTypePutComponent(ft, bytes2sig(component_sig), component_name)
         else:
             logger.error("components should be a seq. of Components"
                          "or tuples(signature, name), but got: %s" % components)
             return NULL
     return ft
+
 
 cdef inline bytes asbytes(s):
     if isinstance(s, bytes):
@@ -327,6 +340,7 @@ cdef inline bytes asbytes(s):
         return s.encode("ascii")
     else:
         raise TypeError("s should be either a str or bytes, got {}".format(type(s)))
+
     
 cdef class MatrixTypeDefinition:
     cdef public bytes signature
@@ -360,7 +374,7 @@ cdef MatrixTypesTable_to_list(SdifHashTableT *t):
         while pName:
             matrix = <SdifMatrixTypeT *>(pName.Data)
             if not SdifListIsEmpty(matrix.ColumnUserList):
-                signature = sig2str(matrix.Signature)
+                signature = sig2bytes(matrix.Signature)
                 column_def = <SdifColumnDefT *>SdifListGetHead(matrix.ColumnUserList)
                 column_names = []
                 column_names.append(bytes(column_def.Name))
@@ -371,6 +385,7 @@ cdef MatrixTypesTable_to_list(SdifHashTableT *t):
                 out.append(row)
             pName = pName.Next
     return out
+
         
 cdef class Component:
     cdef readonly bytes signature
@@ -388,8 +403,9 @@ cdef class Component:
 
 
 cdef Component Component_from_SdifComponent(SdifComponentT *c):
-    cdef Component out = Component(sig2str(c.MtrxS), bytes(c.Name), c.Num)
+    cdef Component out = Component(sig2bytes(c.MtrxS), bytes(c.Name), c.Num)
     return out
+
     
 cdef FrameTypesTable_to_list(SdifHashTableT *t):
     cdef unsigned int i
@@ -403,13 +419,14 @@ cdef FrameTypesTable_to_list(SdifHashTableT *t):
             frame = <SdifFrameTypeT *>(pName.Data)
             if frame.NbComponentUse > 0:
                 components = []
-                signature = sig2str(frame.Signature)
+                signature = sig2bytes(frame.Signature)
                 for j in range(frame.NbComponent - frame.NbComponentUse + 1, frame.NbComponent + 1):
                     component = Component_from_SdifComponent(SdifFrameTypeGetNthComponent(frame, j))
                     components.append(component)
                 out.append(FrameTypeDefinition(signature, components))
             pName = pName.Next
     return out
+
 
 cdef class FrameTypeDefinition:
     cdef readonly bytes signature
@@ -433,6 +450,7 @@ cdef class FrameTypeDefinition:
     def __repr__(self):
         return "1FTD(signature='%s', components=%s)" % (self.signature, self.components)
             
+
 # ----------------------------------------------------------------------
 
 SDIF_PREDEFINEDTYPES = {
@@ -443,6 +461,7 @@ SDIF_PREDEFINEDTYPES = {
         b'RBEP': b'Index, Frequency, Amplitude, Phase, Bandwidth, Offset'
     }
 }
+
 
 def read_sdiftypes():
     """
@@ -455,6 +474,7 @@ def read_sdiftypes():
     frametypes = FrameTypesTable_to_list(gSdifPredefinedTypes.FrameTypesTable)
     matrixtypes = MatrixTypesTable_to_list(gSdifPredefinedTypes.MatrixTypesTable)
     return frametypes, matrixtypes
+
 
 def _frametypes_populate():
     frametypeslist, matrixtypeslist = read_sdiftypes()
@@ -526,7 +546,7 @@ def _find_sdiftypes():
     return ""
 
 
-def sdif_init(sdiftypes_path=None):
+def sdif_init(str sdiftypes_path = ""):
     """
     Initialize the sdif library 
 
@@ -541,7 +561,7 @@ def sdif_init(sdiftypes_path=None):
     string is given, no `SdifTypes.STYP` will be used
 
     Args:
-        sdiftypes_path (str): The path to `SdifTypes.STYP`, or None to search
+        sdiftypes_path (str): The path to `SdifTypes.STYP`, or empty to search
             in default paths
 
     Returns:
@@ -552,7 +572,7 @@ def sdif_init(sdiftypes_path=None):
     import_array()
     if _g_sdif_initiated == 0:
         _g_sdif_initiated = 1
-        if sdiftypes_path is None:
+        if not sdiftypes_path:
             sdiftypes_path = _find_sdiftypes()
         if os.path.exists(sdiftypes_path):
             SdifGenInitCond(asbytes(sdiftypes_path))
@@ -607,10 +627,12 @@ cdef tuple _framestatus2str = (
     "SignatureRead"
 )
 
+
 def framestatus2str(int status):
     if 0 <= status < 6:
         return _framestatus2str[status]
     return None
+
 
 cdef tuple _matrixstatus2str = (
     "Invalid",
@@ -620,6 +642,7 @@ cdef tuple _matrixstatus2str = (
     "DataSkipped",
     "Offline"
 )
+
 
 def matrixstatus2str(int status):
     """
@@ -707,9 +730,9 @@ cdef class Matrix:
     property signature:
         def __get__(self): 
             if self.source_this:
-                return sig2str(self.source_this.CurrMtrxH.Signature)
+                return sig2bytes(self.source_this.CurrMtrxH.Signature)
             else:
-                return sig2str(self._signature)
+                return sig2bytes(self._signature)
                 
     property numerical_signature:
         def __get__(self): 
@@ -835,9 +858,9 @@ cdef class FrameR:
         
     @property
     def signature(self):
-        """ (str) The string signature of this frame """
-        return sig2str(self.source_this.CurrFramH.Signature)
-        
+        """The string signature of this frame, as bytes """
+        return sig2bytes(self.source_this.CurrFramH.Signature)
+
     @property
     def numerical_signature(self):
         if self.source_this.CurrFramH == NULL:
@@ -907,7 +930,7 @@ cdef class FrameR:
             raise StopIteration
         return matrix
 
-    def get_matrix(self, copy=True):
+    def get_matrix(self, bool copy=True):
         """
         Reads the next matrix entirely, returns (matrixsig, data)
 
@@ -991,7 +1014,7 @@ cdef class FrameW:
     
     def __repr__(self):
         return "FrameW(signature=%s, time=%f, streamID=%d, written=%s)" % (
-            sig2str(self.signature), self.time, self.streamID, bool(self._written))
+            sig2bytes(self.signature), self.time, self.streamID, bool(self._written))
 
     def __enter__(self):
         if self._written:
@@ -1020,6 +1043,17 @@ cdef class FrameW:
         Args:
             signature (str): the signature of the matrix
             data_array (numpy.array): the data of the matrix, a 2D array.
+
+
+        Example
+        -------
+
+        ```python
+        with sdiffile.new_frame("1FTD", time) as frame:
+            frame.add_matrix("1MRK", [segmentstart, segmentend, segmentation, label, periodmarker, transientmarker, transientid])
+            ...
+        ```
+
         """
         if self.num_matrices >= 100:
             raise RuntimeError("Two many matrices for one frame")
@@ -1033,7 +1067,7 @@ cdef class FrameW:
         else:
             self.matrices.append(np.ascontiguousarray(data_array))
 
-        self.signatures[self.num_matrices] = str2sig(asbytes(signature))
+        self.signatures[self.num_matrices] = bytes2sig(asbytes(signature))
         self.datatypes[self.num_matrices] = dtype_numpy2sdif(data_array.descr.type_num)
         # self.signatures.append(asbytes(signature))
         self.num_matrices += 1
@@ -1047,7 +1081,32 @@ cdef class FrameW:
         Write the current frame to disk. 
 
         This function should be called after all matrices have been added
-        via add_matrix. The frame is written all at once.
+        via add_matrix. It is not needed if the frame was created
+        as a context manager. After calling write, the frame is finalized
+        and no further matrices can be added
+
+
+        Example
+        -------
+
+        ```python
+        new_frame = sdiffile.new_frame('1SIG', time_now)
+        new_frame.add_matrix(...)
+        # possibly add any other matrices to this frame
+        # When finished adding matrices, write needs to be called
+        new_frame.write()
+        ```
+
+        No need to call `.write()` in this case:
+
+        ```python
+        with sdiffile.new_frame(sig, time) as frame:
+            frame.add_matrix(matrix_sig, data1)
+            frame.add_matrix(matrix_sig, data2)
+            ...
+        ```
+
+
         """
         if self._written:
             raise RuntimeError("Frame has already been written!")
@@ -1136,7 +1195,7 @@ cdef class SdifFile:
             print(s.matrix_read_data())
     ```
 
-    ## Example 2: write a sdiffile
+    ## Example 2: clone a sdiffile with modifications
 
     ```python
 
@@ -1254,6 +1313,10 @@ cdef class SdifFile:
     def close(self):
         """
         Close this SdifFile
+
+        This is called when the object is distroyed, but it can be
+        called explicitely. It will do nothing if called after
+        the file has been already closed.
         """
         if self.eof == SDIF_CLOSED:
             logger.debug("close: can't close SdifFile, since it was already closed")
@@ -1297,10 +1360,10 @@ cdef class SdifFile:
 
     @property 
     def signature(self): 
-        """(str) Current signature as 4-byte string """
-        return sig2str(self.this.CurrSignature)
+        """(bytes) Current 4-char signature as bytes"""
+        return sig2bytes(self.this.CurrSignature)
 
-    @property 
+    @property
     def prev_time(self): 
         """(float) The previous time"""
         return self.this.PrevTime
@@ -1314,7 +1377,7 @@ cdef class SdifFile:
 
     def curr_matrix_size(self):
         """
-        Returns the number of rows and number of columns in the current matrix
+        The shape of the current matrix, as a tuple (rows, columns)
 
         This method can be called after reading the matrix header. It does 
         not read the data itself
@@ -1333,7 +1396,7 @@ cdef class SdifFile:
 
     def curr_matrix_datatype(self):
         """
-        Returns the datatype code (an int) or 0 if go current matrix
+        Returns the datatype code (an int) or 0 if no current matrix
 
         Returns:
             (int) the datatype of the current matrix as an int code
@@ -1361,13 +1424,13 @@ cdef class SdifFile:
         Get the string signature of the current matrix, or None if no current matrix
 
         Returns:
-            (str | None) The 4-byte string signature of the current matrix, 
+            (bytes | None) The 4-byte string signature of the current matrix,
             or None if no matrix
         """
         
         cdef int sig = self.curr_matrix_numerical_signature()
         if sig >= 0:
-            return sig2str(sig)
+            return sig2bytes(sig)
         return None
 
     def frame_num_matrix(self):
@@ -1429,7 +1492,7 @@ cdef class SdifFile:
         """
         if self.this.CurrFramH == NULL:
             return None
-        return sig2str(self.this.CurrFramH.Signature)
+        return sig2bytes(self.this.CurrFramH.Signature)
 
     def frame_time(self):
         """
@@ -2202,7 +2265,7 @@ cdef class SdifFile:
             raise IOError("This function is only possible for SdifFiles opened in write mode")
         if self.write_status == eSdifGeneralHeader:
             self.write_all_ascii_chunks()
-        return FrameW_new(self, str2sig(asbytes(signature)), time, streamID)
+        return FrameW_new(self, bytes2sig(asbytes(signature)), time, streamID)
         
     def new_frame_one_matrix(self, frame_sig, SdifFloat8 time, matrix_sig,
                              c_numpy.ndarray matrixdata, SdifUInt4 streamID=0):
@@ -2241,11 +2304,11 @@ cdef class SdifFile:
             <SdifDataTypeET>(dtype_numpy2sdif(matrixdata.descr.type_num)),
             matrixdata.shape[0], matrixdata.shape[1] # rows, cols
         )
-        SdifFSetCurrFrameHeader(self.this, str2sig(asbytes(frame_sig)), frame_size, 1, streamID, time)
+        SdifFSetCurrFrameHeader(self.this, bytes2sig(asbytes(frame_sig)), frame_size, 1, streamID, time)
         SdifFWriteFrameHeader(self.this)
         if not matrixdata.flags.c_contiguous:
             matrixdata = np.ascontiguousarray(matrixdata)
-        SdifFWriteMatrix(self.this, str2sig(asbytes(matrix_sig)), 
+        SdifFWriteMatrix(self.this, bytes2sig(asbytes(matrix_sig)),
                          <SdifDataTypeET>dtype_numpy2sdif(matrixdata.descr.type_num),
                          matrixdata.shape[0], matrixdata.shape[1],   # rows, cols
                          matrixdata.data)

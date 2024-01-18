@@ -22,10 +22,14 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 from libc.stdio cimport *
 from libc.stdlib cimport *
 
+from .sdifdefs cimport *
+
 cdef extern from "string.h":
     ctypedef void* const_void_ptr "const void *"
     void *memcpy(void *s1, const_void_ptr s2, size_t n)
     void import_array()
+
+ctypedef char* charptr
 
 import os.path
 import platform
@@ -50,10 +54,10 @@ class NoMatrix(Exception): pass
 class SdifOrderError(Exception): pass
 
 
-from pysdif cimport *
+# from pysdif cimport *
 # from sdifh cimport *
 
-DEF _SdifNVTStreamID = 0xfffffffd
+cdef unsigned int _SdifNVTStreamID = 0xfffffffd
 
 # ----------------------------------------------------------------------------------
 
@@ -978,8 +982,9 @@ cdef class FrameW:
     cdef SdifSignature signature
     cdef SdifFloat8 time
     cdef SdifUInt4 streamID
+    cdef SdifSignature signatures[100]
+    cdef int datatypes[100]
     cdef list matrices
-    cdef list signatures
     cdef SdifUInt4 frame_size
     cdef SdifUInt4 num_matrices
     cdef int _written
@@ -995,8 +1000,15 @@ cdef class FrameW:
 
     def __exit__(self, exception_type, exception_value, traceback):
         if self.num_matrices == 0:
-            raise RuntimeError("No matrices were added! Frame not written")
-        self.write()
+            logger.warning("No matrices were added! Frame not written")
+        elif self._written == 1:
+            logger.warning("Do not call frame.write() when using frame as a context manager")
+        else:
+            self.write()
+
+    def __del__(self):
+        if self.num_matrices > 0 and self._written == 0:
+            logger.warning("Frame with %d matrices not written" % self.num_matrices)
 
     property written:
         def __get__(self): return bool(self._written)
@@ -1007,41 +1019,52 @@ cdef class FrameW:
 
         Args:
             signature (str): the signature of the matrix
-            data_array (numpy.array): the data of the matrix, a 2D array
+            data_array (numpy.array): the data of the matrix, a 2D array.
         """
+        if self.num_matrices >= 100:
+            raise RuntimeError("Two many matrices for one frame")
+
         if self._written:
             raise RuntimeError("Frame has already been written!")
-        if data_array.ndim == 1:
-            data_array.resize((data_array.shape[0], 1))
-        self.signatures.append(asbytes(signature))
-        self.matrices.append(np.ascontiguousarray(data_array))
+
+        if data_array.ndim != 2:
+            shape = [data_array.shape[i] for i in range(data_array.ndim)]
+            raise ValueError("Expected a 2D array, got %d dimensions, shape: %s, data: %s" % (data_array.ndim, str(shape), str(data_array)))
+        else:
+            self.matrices.append(np.ascontiguousarray(data_array))
+
+        self.signatures[self.num_matrices] = str2sig(asbytes(signature))
+        self.datatypes[self.num_matrices] = dtype_numpy2sdif(data_array.descr.type_num)
+        # self.signatures.append(asbytes(signature))
         self.num_matrices += 1
         self.frame_size += SdifSizeOfMatrix(
             <SdifDataTypeET>(dtype_numpy2sdif(data_array.descr.type_num)),
             data_array.shape[0], data_array.shape[1]) # rows, cols
-        
+
+
     def write(self):
         """
         Write the current frame to disk. 
 
-        This function is called after add_matrix has been called (if there 
-        are any matrices in the current frame). The frame is written all at once. 
+        This function should be called after all matrices have been added
+        via add_matrix. The frame is written all at once.
         """
         if self._written:
             raise RuntimeError("Frame has already been written!")
+
         cdef SdifUInt4 fsz
         cdef SdifSignature matrix_sig
         cdef int dtype
         cdef c_numpy.ndarray matrix
         cdef int i
-        SdifFSetCurrFrameHeader(self.sdiffile.this, self.signature, self.frame_size, 
+        SdifFSetCurrFrameHeader(self.sdiffile.this, self.signature, self.frame_size,
                                 self.num_matrices, self.streamID, self.time)
         fsz = SdifFWriteFrameHeader(self.sdiffile.this)
         for i in range(self.num_matrices):
-            matrix_sig = str2sig(self.signatures[i])
+            matrix_sig = self.signatures[i]
             matrix = self.matrices[i]
-            dtype = dtype_numpy2sdif(matrix.descr.type_num)
-            fsz += SdifFWriteMatrix(self.sdiffile.this, matrix_sig, 
+            dtype = self.datatypes[i]
+            fsz += SdifFWriteMatrix(self.sdiffile.this, matrix_sig,
                                     <SdifDataTypeET>dtype, 
                                     matrix.shape[0], matrix.shape[1],   # rows, cols
                                     matrix.data)
@@ -1057,7 +1080,6 @@ cdef FrameW FrameW_new(SdifFile sdiffile, SdifSignature sig,
     f.time = time
     f.streamID = streamID
     f.matrices = []
-    f.signatures = []
     f.frame_size = SdifSizeOfFrameHeader()
     f.num_matrices = 0
     f._written = 0
@@ -2152,7 +2174,7 @@ cdef class SdifFile:
             streamID (int): The ID of the stream
     
         Returns:
-            (FrameW) A FrameW, used to write a (see example)
+            (FrameW) A FrameW, used to write a set of matrices (see example)
         
         ## Example
         
@@ -2211,6 +2233,10 @@ cdef class SdifFile:
             raise IOError("This function is only possible for SdifFiles opened in write mode")
         if self.write_status == eSdifGeneralHeader:
             self.write_all_ascii_chunks()
+
+        if matrixdata.ndim != 2:
+            raise ValueError("Expected a 2D array, got shape %d dimensions" % matrixdata.ndim)
+
         cdef size_t frame_size = SdifSizeOfFrameHeader() + SdifSizeOfMatrix(
             <SdifDataTypeET>(dtype_numpy2sdif(matrixdata.descr.type_num)),
             matrixdata.shape[0], matrixdata.shape[1] # rows, cols

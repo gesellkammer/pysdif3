@@ -41,11 +41,11 @@ for i, frame in enumerate(s):
         print(f"\nFrame #{i}, sig: {sig.decode('ascii')}, {frame.time:f} s")
         for m in frame:
             data = m.get_data()
-            print(f"  Matrix {m.signature.decode('ascii')}")
-            print(data)
+            print(f"  Matrix {m.signature.decode('ascii')}, shape: {data.shape[0]} rows x {data.shape[1]} cols")
+            print('\t' + str(data).replace('\n', '\n\t'))
 
-
-print(f"{t0:f}s - {t1:f}s     # frames: {numframes}    # matrices: {nummatrices}\n")
+print("\nGlobal statistics: ")
+print(f"    {t0:f}s - {t1:f}s     # frames: {numframes}    # matrices: {nummatrices}\n")
 for sig, num in counts.items():
     print(f"    {sig.decode('ascii')}: {num} frames")
 

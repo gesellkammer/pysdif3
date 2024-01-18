@@ -54,8 +54,10 @@ def is_newer(file1, file2):
 
 def cython_step():
     if os.path.exists("pysdif/_pysdif.c") and not is_newer("pysdif/_pysdif.pyx", "pysdif/_pysdif.c"):
+        print(">>> No need to cythonize ...")
         return
     from Cython.Compiler.Main import compile
+    print(">>> cythonizing pysdif/_pysdif.pyx")
     compilation_result = compile("pysdif/_pysdif.pyx")
     print("Compiled cython file: ", compilation_result.c_file)
 
@@ -154,7 +156,6 @@ setup(
     ext_modules = [
         Extension(
             'pysdif._pysdif',
-            # sources = sources + ['pysdif/_pysdif.pyx', 'pysdif/pysdif.pxd'],
             sources = sources + ['pysdif/_pysdif.c'],
             include_dirs = include_dirs + ['pysdif', numpy_include()],
             depends=sdif_headers,
@@ -166,7 +167,7 @@ setup(
     ],
     install_requires = [
         'numpy>=1.10',
-        'cython>=0.25'
+        'cython>=3.0.8'
     ],
     packages = ['pysdif'],
     package_dir  = {'pysdif': 'pysdif'},

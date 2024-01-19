@@ -62,7 +62,7 @@ Returns a list of predefined sdif matrix types
 
 ```python
 
-sdif_init(sdiftypes_path=None)
+sdif_init(str sdiftypes_path='')
 
 ```
 
@@ -84,8 +84,8 @@ string is given, no `SdifTypes.STYP` will be used
 
 **Args**
 
-* **sdiftypes_path** (`str`): The path to `SdifTypes.STYP`, or None to search
-    in default paths (*default*: `None`)
+* **sdiftypes_path** (`str`): The path to `SdifTypes.STYP`, or empty to search
+    in default paths (*default*: ``)
 
 **Returns**
 
@@ -103,7 +103,7 @@ signature2str(int sig)
 ```
 
 
-Converts a numeric signature into a string signature
+Converts a numeric signature into a byte string signature
 
 
 
@@ -113,7 +113,7 @@ Converts a numeric signature into a string signature
 
 **Returns**
 
-&nbsp;&nbsp;&nbsp;&nbsp;(`str`) The string signature corresponding to the numeric signature
+&nbsp;&nbsp;&nbsp;&nbsp;(`bytes`) The byte string signature corresponding to the numeric signature
 
 ----------
 
@@ -133,7 +133,7 @@ Converts a 4-byte string signature into a numeric signature
 
 **Args**
 
-* **s** (`str`): a string of 4 characters
+* **s** (`bytes | str`): a string of 4 characters
 
 **Returns**
 

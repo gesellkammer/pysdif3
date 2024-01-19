@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from .tools import check_matrix_exists
 from ._pysdif import SdifFile
 
 
-class Marker(object):
+class Marker:
     __slots__ = ('begin', 'end', 'data', 'type', 'id')
 
     def __init__(self, marker_type, begin, end, data, marker_id=None):

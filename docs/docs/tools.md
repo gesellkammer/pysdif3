@@ -5,7 +5,7 @@
 
 ```python
 
-def add_type_definitions(infile: str, outfile: str, metadata: Dict[str, 
+def add_type_definitions(infile: str, outfile: str, metadata: dict[str, 
                          str] = None) -> None
 
 ```
@@ -23,7 +23,7 @@ modified `SdifTypes.STYP`
 
 * **infile** (`str`): the path to a .sdif file
 * **outfile** (`str`): it can be the same as infile
-* **metadata** (`Dict[str, str]`): a dictionary with metadata to be added to the
+* **metadata** (`dict[str, str]`): a dictionary with metadata to be added to the
     metadata already present (*default*: `None`)
 
 ----------
@@ -36,6 +36,9 @@ modified `SdifTypes.STYP`
 def as_sdiffile(s: U[str, SdifFile]) -> SdifFile
 
 ```
+
+
+NB: the original sdif or SdifFile is not modified
 
 
 NB: the original sdif or SdifFile is not modified
@@ -59,12 +62,23 @@ def check_matrix_exists(sdiffile: str, frame_sig: str, matrix_sig: str) -> bool
 ```
 
 
+Returns True if there is a frame/matrix matching the given signatures
+
+
+A match is positive if there is a frame with the given signature which
+holds a matrix with the given signature
+
+
 
 **Args**
 
-* **sdiffile** (`str`):
-* **frame_sig** (`str`):
-* **matrix_sig** (`str`):
+* **sdiffile** (`str`): the sdif file to query
+* **frame_sig** (`str`): the frame signature to match (a 4-char str)
+* **matrix_sig** (`str`): the matrix signature to match (a 4-char str)
+
+**Returns**
+
+&nbsp;&nbsp;&nbsp;&nbsp;(`bool`) True if there is at least one frame with one matrix matching the given signatures
 
 ----------
 
@@ -116,7 +130,7 @@ framestatus2str(int status)
 
 ```python
 
-def frametypes_used(sdiffile: str) -> Set[str]
+def frametypes_used(sdiffile: str) -> set[str]
 
 ```
 
@@ -131,7 +145,7 @@ Find all the frametypes used in this sdiffile
 
 **Returns**
 
-&nbsp;&nbsp;&nbsp;&nbsp;(`Set[str]`) the set of frame signatures present in the given file
+&nbsp;&nbsp;&nbsp;&nbsp;(`set[str]`) the set of frame signatures present in the given file
 
 ----------
 
@@ -164,15 +178,12 @@ Return a string identifier for a matrix status.
 
 ```python
 
-def matrixtypes_for_predefined_frametype(sig: str) -> Dict[str, list[str]]
+def matrixtypes_for_predefined_frametype(sig: str) -> dict[str, list[str]]
 
 ```
 
 
-Given a predefined frametype, return a list of matrix definitions
-
-
-included in the frame definition
+Return a list of matrix definitions included in the frame definition
 
 
 
@@ -182,7 +193,7 @@ included in the frame definition
 
 **Returns**
 
-&nbsp;&nbsp;&nbsp;&nbsp;(`Dict[str, List[str]]`) the matrix definitions possible within the given frame
+&nbsp;&nbsp;&nbsp;&nbsp;(`dict[str, list[str]]`) the matrix definitions possible within the given frame
 
 ----------
 
@@ -251,12 +262,12 @@ Retrieves predefined types definitions parsed from SdifTypes.STYP
 
 ```python
 
-def repair_RBEP(sdiffile: str, metadata: Dict[str, str] = None) -> None
+def repair_RBEP(sdiffile: str, metadata: dict[str, str] = None) -> None
 
 ```
 
 
-Add the type definitions to a RBEP file
+Add the type definitions to a RBEP file, in place
 
 
 Some libraries (loris, for example), use RBEP frame types/matrix types 
@@ -268,8 +279,9 @@ definitions
 
 **Args**
 
-* **sdiffile** (`str`):
-* **metadata** (`Dict[str, str]`):  (*default*: `None`)
+* **sdiffile** (`str`): the .sdif file to repair
+* **metadata** (`dict[str, str]`): if given, metadata to add to the sdif file
+    (*default*: `None`)
 
 ----------
 
@@ -292,7 +304,7 @@ sdif_cleanup()
 
 ```python
 
-sdif_init(sdiftypes_path=None)
+sdif_init(str sdiftypes_path='')
 
 ```
 
@@ -314,8 +326,8 @@ string is given, no `SdifTypes.STYP` will be used
 
 **Args**
 
-* **sdiftypes_path** (`str`): The path to `SdifTypes.STYP`, or None to search
-    in default paths (*default*: `None`)
+* **sdiftypes_path** (`str`): The path to `SdifTypes.STYP`, or empty to search
+    in default paths (*default*: ``)
 
 **Returns**
 
@@ -333,7 +345,7 @@ signature2str(int sig)
 ```
 
 
-Converts a numeric signature into a string signature
+Converts a numeric signature into a byte string signature
 
 
 
@@ -343,7 +355,7 @@ Converts a numeric signature into a string signature
 
 **Returns**
 
-&nbsp;&nbsp;&nbsp;&nbsp;(`str`) The string signature corresponding to the numeric signature
+&nbsp;&nbsp;&nbsp;&nbsp;(`bytes`) The byte string signature corresponding to the numeric signature
 
 ----------
 
@@ -363,7 +375,7 @@ Converts a 4-byte string signature into a numeric signature
 
 **Args**
 
-* **s** (`str`): a string of 4 characters
+* **s** (`bytes | str`): a string of 4 characters
 
 **Returns**
 
@@ -387,7 +399,11 @@ Returns the first and last times of all frames in this sdiffile
 
 **Args**
 
-* **sdiffile** (`str`):
+* **sdiffile** (`str`): the sdif file to query
+
+**Returns**
+
+&nbsp;&nbsp;&nbsp;&nbsp;(`tuple[float, float]`) a tuple (starttime: float, endtime: float)
 
 ----------
 
@@ -396,8 +412,8 @@ Returns the first and last times of all frames in this sdiffile
 
 ```python
 
-def update_metadata(sdiffile: str, metadata: Dict[str, str], 
-                    outfile: str = None) -> None
+def update_metadata(sdiffile: str, metadata: dict[str, str], outfile: str =
+                    ) -> None
 
 ```
 
@@ -418,9 +434,10 @@ untouched.
 
 **Args**
 
-* **sdiffile** (`str`):
-* **metadata** (`Dict[str, str]`):
-* **outfile** (`str`):  (*default*: `None`)
+* **sdiffile** (`str`): the sdif file to modify
+* **metadata** (`dict[str, str]`): the new metadata
+* **outfile** (`str`): if not given, the file is modified in place (*default*:
+    ``)
 
 ----------
 
@@ -429,8 +446,8 @@ untouched.
 
 ```python
 
-def write_metadata(sdif_filename: str, metadata: Dict[str, str], 
-                   outfile: str = None) -> None
+def write_metadata(sdif_filename: str, metadata: dict[str, str], outfile: str =
+                   ) -> None
 
 ```
 
@@ -447,6 +464,6 @@ If no outfile is given, the sdif file is modified in place
 **Args**
 
 * **sdif_filename** (`str`): the filename of the source sdif file
-* **metadata** (`Dict[str, str]`):
+* **metadata** (`dict[str, str]`):
 * **outfile** (`str`): the outfile to generate, or None to modify the source
-    file in place (*default*: `None`)
+    file in place (*default*: ``)

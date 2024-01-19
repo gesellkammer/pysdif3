@@ -1,5 +1,4 @@
 # Matrix
-
 ## 
 
 
@@ -39,18 +38,41 @@ for frame in sdif:
 
 * **source** (`SdifFile`): The source sdiffile this matrix belongs to
 
+
+---------
+
+
+**Summary**
+
+
+
+| Property  | Description  |
+| :-------- | :----------- |
+| cols | - |
+| dtype | - |
+| numerical_signature | - |
+| rows | - |
+| signature | - |
+| status | - |
+
+
+| Method  | Description  |
+| :------ | :----------- |
+| [column_names](#column_names) | Returns a list of column names for the current matrix |
+| [get_data](#get_data) | Read the data from the matrix as a numpy array |
+| [skip](#skip) | Skip reading the data |
+
+
+---------
+
+
 **Attributes**
 
 * **cols**
-
 * **dtype**
-
 * **numerical_signature**
-
 * **rows**
-
 * **signature**
-
 * **status**
 
 
@@ -106,7 +128,7 @@ Read the data from the matrix as a numpy array
 **Args**
 
 * **copy** (`bool`): if True, the returned data is a copy of the data read
-    and will not be invalidated
+    and will not be invalidated (*default*: `True`)
 
 **Returns**
 

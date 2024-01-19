@@ -930,7 +930,7 @@ cdef class FrameR:
             raise StopIteration
         return matrix
 
-    def get_matrix(self, bool copy=True):
+    def get_matrix(self, copy=True):
         """
         Reads the next matrix entirely, returns (matrixsig, data)
 
@@ -1170,7 +1170,7 @@ cdef class SdifFile:
 
     ## Example 1: read a sdiffile 
 
-    ** High-Level Interface **
+    **High-Level Interface**
 
     ```python
 
@@ -1182,7 +1182,7 @@ cdef class SdifFile:
             print(numpyarray)
     ```
 
-    ** Low-Level Interface **
+    **Low-Level Interface**
 
     ```python
     s = SdifFile("mysdif.sdif")
@@ -1719,7 +1719,7 @@ cdef class SdifFile:
                 valid until the next matrix is read.
 
         Returns:
-            a numpy array representing the matrix
+            (np.ndarray) a numpy array representing the matrix
         
         If the matrix-header was not read, it is read here
         The matrix signature cam be retrieved via sdiffile.curr_matrix_signature()
@@ -2176,13 +2176,11 @@ cdef class SdifFile:
             source (str): ?? 
             treeway (str): ??
 
-        Returns:
-            None 
         """
         SdifStreamIDTablePutSID(self.this.StreamIDsTable,
             numid, source, treeway)
 
-    def add_predefined_frametype(self, signature):
+    def add_predefined_frametype(self, str signature):
         """
         Add a predefined frame type with corresponding matrix definitions
 
@@ -2209,7 +2207,7 @@ cdef class SdifFile:
 
     def write_all_ascii_chunks(self):
         """
-        **Low-level Interface** 
+        Low-level Interface. Writes all text chunks
 
         Once the NVTs and matrix and frame definitions have been added to the SdifFile,
         this methods writes them all together to disk and the SdifFile is ready to accept

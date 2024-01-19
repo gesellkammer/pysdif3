@@ -1,5 +1,4 @@
 # FrameR
-
 ## 
 
 
@@ -42,20 +41,41 @@ for frame in sdiffile:
 
 * **source** (`SdifFile`): the sidffile this frame belongs to
 
+
+---------
+
+
+**Summary**
+
+
+
+| Property  | Description  |
+| :-------- | :----------- |
+| id | (int) The id of this frame |
+| matrix_idx | The index of the current matrix |
+| num_matrices | (int) The number of matrices in this frame |
+| numerical_signature | - |
+| signature | The string signature of this frame, as bytes |
+| size | (int) The size of this frame in bytes |
+| time | (float) The time of this frame |
+
+
+| Method  | Description  |
+| :------ | :----------- |
+| [get_matrix](#get_matrix) | Reads the next matrix entirely, returns (matrixsig, data) |
+
+
+---------
+
+
 **Attributes**
 
 * **id**: (int) The id of this frame
-
 * **matrix_idx**: The index of the current matrix
-
 * **num_matrices**: (int) The number of matrices in this frame
-
 * **numerical_signature**
-
-* **signature**: (str) The string signature of this frame
-
+* **signature**: The string signature of this frame, as bytes
 * **size**: (int) The size of this frame in bytes
-
 * **time**: (float) The time of this frame
 
 
@@ -104,11 +124,11 @@ for matrix in frame:
 
 **Args**
 
-* **copy**: return a copy of the data. If copy==False, then the data         is
-    only valid as long as no other matrix is read. This is          done to
+* **copy** (`bool`): return a copy of the data. If copy==False, then the data
+    is only valid as long as no other matrix is read. This is          done to
     avoid allocating new memory for each new matrix         for the cases where
     the data is not preversed but transformed         within a streaming
-    procees.
+    procees. (*default*: `True`)
 
 **Returns**
 

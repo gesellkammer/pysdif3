@@ -46,8 +46,10 @@ def main(destfolder: str):
         open(docspath, "w").write(docs)
     
     funcs, classes, modules = findComponents(pysdif, exclude=exclude)
-    funcsdocstr = doctools.generateDocsForFunctions(funcs, renderConfig=renderConfig, title = "Functions", 
-                                                    startLevel=2)
+    funcsdocstr = doctools.generateDocsForFunctions(funcs, 
+                                                    renderConfig=renderConfig, 
+                                                    title="Functions",
+                                                    indentLevel=2)
 
 
 
@@ -68,8 +70,10 @@ def main(destfolder: str):
 
     funcs, classes, modules = findComponents(pysdif.tools, exclude=exclude)
     print(funcs)
-    toolsdocs = doctools.generateDocsForFunctions(funcs, renderConfig=renderConfig, title = "Tools", 
-                                                  startLevel=2)
+    toolsdocs = doctools.generateDocsForFunctions(funcs, 
+                                                  renderConfig=renderConfig, 
+                                                  title="Tools", 
+                                                  indentLevel=2)
     open(os.path.join(destfolder, "tools.md"), "w").write(toolsdocs)
 
     

@@ -2,7 +2,7 @@ from __future__ import annotations
 from ._pysdif import *
 import os
 import numpy as np
-from typing import Union as U, Dict, List, Tuple
+from typing import Union as U
 import tempfile
 
 
@@ -21,7 +21,7 @@ def as_sdiffile(s: U[str, SdifFile]) -> SdifFile:
     return SdifFile(s)
 
 
-def convert_1TRC_to_RBEP(sdiffile: U[str, SdifFile], metadata:dict=None) -> None:
+def convert_1TRC_to_RBEP(sdiffile: U[str, SdifFile], metadata: dict = None) -> None:
     """
     Create a RBEP clone from a 1TRC file.
 
@@ -37,7 +37,7 @@ def convert_1TRC_to_RBEP(sdiffile: U[str, SdifFile], metadata:dict=None) -> None
     if metadata is not None:
         _update_NVTs(sdiffile, outfile, metadata)
 
-    def data_convert_1TRC_RBEP(d: np.array):
+    def data_convert_1TRC_RBEP(d: np.array) -> np.ndarray:
         # normally, 1TRC matrices have index, freq, amp, phase
         # but Spear, for example, add columns to the 1TRC definition to 
         # store time offset
@@ -75,10 +75,9 @@ def _asbytes(s: U[bytes, str]) -> bytes:
         raise TypeError("s should be bytes or str")
 
 
-def matrixtypes_for_predefined_frametype(sig: str) -> Dict[str, List[str]]:
+def matrixtypes_for_predefined_frametype(sig: str) -> dict[str, list[str]]:
     """
-    Given a predefined frametype, return a list of matrix definitions
-    included in the frame definition
+    Return a list of matrix definitions included in the frame definition
 
     Args:
         sig: the signature, a 4-byte string
@@ -99,7 +98,7 @@ def _predefined_frametypes_get(sig: str):
     return SDIF_PREDEFINEDTYPES['frametypes'].get(_asbytes(sig))
 
 
-def frametypes_used(sdiffile: str) -> Set[str]:
+def frametypes_used(sdiffile: str) -> set[str]:
     """
     Find all the frametypes used in this sdiffile
 
@@ -118,7 +117,7 @@ def frametypes_used(sdiffile: str) -> Set[str]:
     return signatures
 
 
-def add_type_definitions(infile: str, outfile: str, metadata: Dict[str, str]=None
+def add_type_definitions(infile: str, outfile: str, metadata: dict[str, str] = None
                          ) -> None:
     """
     Writes predefined types explicitely
@@ -161,20 +160,26 @@ def add_type_definitions(infile: str, outfile: str, metadata: Dict[str, str]=Non
     outsdif.close()
 
     
-def repair_RBEP(sdiffile: str, metadata:Dict[str, str]=None) -> None:
+def repair_RBEP(sdiffile: str, metadata: dict[str, str] = None) -> None:
     """
-    Add the type definitions to a RBEP file
+    Add the type definitions to a RBEP file, in place
 
     Some libraries (loris, for example), use RBEP frame types/matrix types 
     without including the definition in the sdif file. This function
     clones a given sdif file and ensures that it has all needed 
     definitions
+
+    Args:
+        sdiffile: the .sdif file to repair
+        metadata: if given, metadata to add to the sdif file
     """
     assert SdifFile(sdiffile).signature == "RBEP"
-    return add_type_definitions(sdiffile, metadata=metadata, inplace=True)
+    add_type_definitions(sdiffile, metadata=metadata, inplace=True)
 
         
-def write_metadata(sdif_filename: str, metadata:Dict[str, str], outfile: str=None 
+def write_metadata(sdif_filename: str,
+                   metadata: dict[str, str],
+                   outfile=''
                    ) -> None:
     """
     Add metadata to a sdif file
@@ -189,7 +194,7 @@ def write_metadata(sdif_filename: str, metadata:Dict[str, str], outfile: str=Non
         matadata: the metadata to add
     
     """
-    if outfile is None:
+    if not outfile:
         inplace = True
         outfile = tempfile.mktemp(suffix=".sdif")
     else:
@@ -207,7 +212,7 @@ def write_metadata(sdif_filename: str, metadata:Dict[str, str], outfile: str=Non
         os.rename(outfile, sdif_filename)
 
         
-def update_metadata(sdiffile: str, metadata: Dict[str, str], outfile: str=None):
+def update_metadata(sdiffile: str, metadata: dict[str, str], outfile='') -> None:
     """
     Update the metadata of the given sdiffile. 
 
@@ -219,9 +224,14 @@ def update_metadata(sdiffile: str, metadata: Dict[str, str], outfile: str=None):
 
         Only the first NVT is taken into consideration. Other NVTs, if present,
         are left untouched.
+
+    Args:
+        sdiffile: the sdif file to modify
+        metadata: the new metadata
+        outfile: if not given, the file is modified in place
     
     """
-    if outfile is None:
+    if not outfile:
         inplace = True
         outfile = tempfile.mktemp(suffix=".sdif")
     else:
@@ -246,9 +256,15 @@ def _update_NVTs(insdif, outsdif, metadata):
         outsdif.add_NVT(nvt)
 
         
-def time_range(sdiffile: str) -> Tuple[float, float]:
+def time_range(sdiffile: str) -> tuple[float, float]:
     """
     Returns the first and last times of all frames in this sdiffile
+
+    Args:
+        sdiffile: the sdif file to query
+
+    Returns:
+        a tuple (starttime: float, endtime: float)
     """
     f = as_sdiffile(sdiffile)
     f.rewind()
@@ -261,11 +277,28 @@ def time_range(sdiffile: str) -> Tuple[float, float]:
     
 
 def check_matrix_exists(sdiffile: str, frame_sig: str, matrix_sig: str) -> bool:
+    """
+    Returns True if there is a frame/matrix matching the given signatures
+
+    A match is positive if there is a frame with the given signature which
+    holds a matrix with the given signature
+
+    Args:
+        sdiffile: the sdif file to query
+        frame_sig: the frame signature to match (a 4-char str)
+        matrix_sig: the matrix signature to match (a 4-char str)
+
+    Returns:
+        True if there is at least one frame with one matrix matching the
+        given signatures
+    """
     sdiffile = SdifFile(sdiffile)
+    framesigbytes = _asbytes(frame_sig)
+    matrixsigbytes = _asbytes(matrix_sig)
     for frame in sdiffile:
-        if frame.signature == frame_sig:
+        if frame.signature == framesigbytes:
             for matrix in frame:
-                if matrix.signature == matrix_sig:
+                if matrix.signature == matrixsigbytes:
                     return True
     return False        
 

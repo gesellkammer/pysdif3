@@ -1,5 +1,4 @@
 # SdifFile
-
 ## 
 
 
@@ -53,7 +52,7 @@ while True:
         print(s.matrix_read_data())
 ```
 
-### Example 2: write a sdiffile
+### Example 2: clone a sdiffile with modifications
 
 ```python
 
@@ -76,25 +75,99 @@ outsdif.close()
 * **filename** (`str`): path to a sdif file
 * **mode** (`str`): "r" = read, "w" = write, "rw" = read+write
 
+
+---------
+
+
+**Summary**
+
+
+
+| Property  | Description  |
+| :-------- | :----------- |
+| eof | - |
+| frame_pos | (int) The current frame position |
+| is_seekable | (bool) Is this SdifFile seekable? |
+| mode | (str) The mode in which this sdif file was opened ('r', 'w') |
+| name | (str) The name of this sdif file |
+| numerical_signature | (int) Current signature as numerical signature |
+| pos | The last position read |
+| prev_time | (float) The previous time |
+| signature | (bytes) Current 4-char signature as bytes |
+
+
+| Method  | Description  |
+| :------ | :----------- |
+| [__init__](#__init__) | - |
+| [add_NVT](#add_NVT) | The NVT (Name Value Table) is a place to put metadata about the file. |
+| [add_frame_type](#add_frame_type) | Adds a frame type to this sdif. |
+| [add_matrix_type](#add_matrix_type) | Adds a matrix type to this Sdif |
+| [add_predefined_frametype](#add_predefined_frametype) | Add a predefined frame type with corresponding matrix definitions |
+| [add_streamID](#add_streamID) | This method is only there for completion. |
+| [clone_NVTs](#clone_NVTs) | Clone the NVT (name:value table) from source (an open SdifFile) |
+| [clone_definitions](#clone_definitions) | Only for writing mode - Clone both NVT(s), frame and matrix definitions |
+| [clone_frames](#clone_frames) | Clone all the frames in source which are included in |
+| [clone_type_definitions](#clone_type_definitions) | Clone the frame and matrix type definitions of source_sdiffile |
+| [close](#close) | Close this SdifFile |
+| [curr_frame_available](#curr_frame_available) | SdifFile.curr_frame_available(self) |
+| [curr_frame_is_selected](#curr_frame_is_selected) | Return whether the current frame is selected. |
+| [curr_matrix_available](#curr_matrix_available) | SdifFile.curr_matrix_available(self) |
+| [curr_matrix_datatype](#curr_matrix_datatype) | Returns the datatype code (an int) or 0 if no current matrix |
+| [curr_matrix_is_selected](#curr_matrix_is_selected) | Return whether the current matrix is selected. |
+| [curr_matrix_signature](#curr_matrix_signature) | Get the string signature of the current matrix, or None if no current matrix |
+| [curr_matrix_size](#curr_matrix_size) | The shape of the current matrix, as a tuple (rows, columns) |
+| [curr_signature](#curr_signature) | **Low-level interface** - Return the current frame's numerical signature |
+| [frame_id](#frame_id) | Get the id of the current frame, or -1 if no current frame |
+| [frame_num_matrix](#frame_num_matrix) | Get the number of matrices in current frame. |
+| [frame_numerical_signature](#frame_numerical_signature) | Return the num. signature of current frame, or -1 if no current frame |
+| [frame_read_header](#frame_read_header) | Low level interface - Read the frame header. |
+| [frame_signature](#frame_signature) | Return the str. signature of the current frame, or None if no current frame |
+| [frame_skip_data](#frame_skip_data) | Low level interface - Skip frame and all its matrices |
+| [frame_skip_rest](#frame_skip_rest) | Skipts the rest of the frame, so that a new frame can be read. |
+| [frame_time](#frame_time) | Get the time of the current frame, or -1 if no current frame |
+| [frame_types_to_string](#frame_types_to_string) | Returns a string with all frame types |
+| [get_NVTs](#get_NVTs) | Return a list with all defined NameValueTables |
+| [get_frame_types](#get_frame_types) | Returns a list of Frame Type Definitions (1FTD) |
+| [get_matrix_types](#get_matrix_types) | Get a list of matrix type definitions (1MTD) |
+| [get_num_NVTs](#get_num_NVTs) | Get the number of NameValueTables defined in this sdif |
+| [get_stream_IDs](#get_stream_IDs) | SdifFile.get_stream_IDs(self) |
+| [last_error](#last_error) | Returns (error_tag, error_level) or None if there is no last error |
+| [matrix_read_data](#matrix_read_data) | Read the data of the current matrix as a numpy array |
+| [matrix_read_header](#matrix_read_header) | Low level interface - Read the matrix header |
+| [matrix_skip](#matrix_skip) | Low level Interface. Skip the matrix altogether. |
+| [matrix_skip_data](#matrix_skip_data) | Low-level Interface - Skip the matrix data without reading it. |
+| [matrix_types_to_string](#matrix_types_to_string) | Returns a string with all matrix types |
+| [new_frame](#new_frame) | Create a new frame with given signature and at given time |
+| [new_frame_one_matrix](#new_frame_one_matrix) | Create a frame containing only one matrix and write it |
+| [next_frame](#next_frame) | Read the next frame, returns a Frame or None if no more frames left. |
+| [next_matrix](#next_matrix) | Read the next matrix header and return a Matrix with its data **still not read**. |
+| [print_NVT](#print_NVT) | Low-Level Interface - Print the name value table |
+| [print_all_ascii_chunks](#print_all_ascii_chunks) | Low-Level Interface - print all text chunks |
+| [print_all_stream_ID](#print_all_stream_ID) | Low-Level Interface - Print the ID of all streams |
+| [print_all_types](#print_all_types) | Low-Level Interface - Print all types defined in this sdif file |
+| [print_frame_header](#print_frame_header) | Low-Level Interface- Print the frame header |
+| [print_general_header](#print_general_header) | Low-Level Interface - Print the general header |
+| [print_matrix_header](#print_matrix_header) | Low-Level Interface - Print the matrix header |
+| [print_one_row](#print_one_row) | Low-Level Interface - print one row of the current matrix |
+| [rewind](#rewind) | Rewind the SdifFile. |
+| [status](#status) | The status of this sdiffile |
+| [write_all_ascii_chunks](#write_all_ascii_chunks) | **Low-level Interface** |
+
+
+---------
+
+
 **Attributes**
 
 * **eof**
-
-* **frame_pos**
-
+* **frame_pos**: (int) The current frame position
 * **is_seekable**: (bool) Is this SdifFile seekable?
-
-* **mode**
-
-* **name**
-
+* **mode**: (str) The mode in which this sdif file was opened ('r', 'w')
+* **name**: (str) The name of this sdif file
 * **numerical_signature**: (int) Current signature as numerical signature
-
 * **pos**: The last position read
-
-* **prev_time**: (float)
-
-* **signature**: (str) Current signature as 4-byte string
+* **prev_time**: (float) The previous time
+* **signature**: (bytes) Current 4-char signature as bytes
 
 
 ---------
@@ -385,7 +458,7 @@ Clone all the frames in source which are included in
 
 * **source** (`SdifFile`): The SdifFile to clone from
 * **signatures_to_clone** (`list[str]`): A seq. of signature, or None to clone
-    all
+    all (*default*: `None`)
 
 ----------
 
@@ -426,6 +499,11 @@ SdifFile.close(self)
 
 
 Close this SdifFile
+
+
+This is called when the object is distroyed, but it can be
+called explicitely. It will do nothing if called after
+the file has been already closed.
 
 ----------
 
@@ -494,7 +572,7 @@ SdifFile.curr_matrix_datatype(self)
 ```
 
 
-Returns the datatype code (an int) or 0 if go current matrix
+Returns the datatype code (an int) or 0 if no current matrix
 
 
 
@@ -545,7 +623,7 @@ Get the string signature of the current matrix, or None if no current matrix
 
 **Returns**
 
-&nbsp;&nbsp;&nbsp;&nbsp;(`str | None`) The 4-byte string signature of the current matrix, or None if no matrix
+&nbsp;&nbsp;&nbsp;&nbsp;(`bytes | None`) The 4-byte string signature of the current matrix, or None if no matrix
 
 ----------
 
@@ -559,7 +637,7 @@ SdifFile.curr_matrix_size(self)
 ```
 
 
-Returns the number of rows and number of columns in the current matrix
+The shape of the current matrix, as a tuple (rows, columns)
 
 
 This method can be called after reading the matrix header. It does 
@@ -667,7 +745,7 @@ SdifFile.frame_read_header(self)
 ```
 
 
-** Low level interface ** - Read the frame header.
+Low level interface - Read the frame header.
 
 
 Returns the number of bytes read. If it reaches the
@@ -714,7 +792,7 @@ SdifFile.frame_skip_data(self)
 ```
 
 
-**Low level interface** - Skip frame and all its matrices
+Low level interface - Skip frame and all its matrices
 
 ----------
 
@@ -768,7 +846,7 @@ SdifFile.frame_types_to_string(self)
 ```
 
 
-returns a string with all frame types
+Returns a string with all frame types
 
 ----------
 
@@ -811,6 +889,12 @@ Returns a list of Frame Type Definitions (1FTD)
 Each FrameTypeDefinition is a FrameTypeDefinition(signature:bytes, components:list[Component])
 (a Component has the attributes signature:bytes, name:bytes, num:int)
 
+
+
+**Returns**
+
+&nbsp;&nbsp;&nbsp;&nbsp;(`list[FrameTypeDefinition]`) A list of FrameTypeDefinition
+
 ----------
 
 ## get\_matrix\_types
@@ -838,12 +922,18 @@ Get a list of matrix type definitions (1MTD)
 
 ```python
 
-def get_num_NVTs(self) -> None
+SdifFile.get_num_NVTs(self)
 
 ```
 
 
-SdifFile.get_num_NVTs(self)
+Get the number of NameValueTables defined in this sdif
+
+
+
+**Returns**
+
+&nbsp;&nbsp;&nbsp;&nbsp;(`int`) The number of nvts in this sdiffile
 
 ----------
 
@@ -906,7 +996,12 @@ myarray = tmparray.copy()
 
 **Args**
 
-* **copy**:
+* **copy** (`bool`): if True, copy the matrix data. Otherwise, the data is only
+    valid until the next matrix is read. (*default*: `False`)
+
+**Returns**
+
+&nbsp;&nbsp;&nbsp;&nbsp;a numpy array representing the matrix
 
 ----------
 
@@ -920,7 +1015,7 @@ SdifFile.matrix_read_header(self)
 ```
 
 
-**Low level interface** - Read the matrix header
+Low level interface - Read the matrix header
 
 
 Reads the matrix header (signature, number of rows and columns, etc.)
@@ -970,7 +1065,7 @@ SdifFile.matrix_skip_data(self)
 ```
 
 
-**Low-level Interface** - Skip the matrix data without reading it.
+Low-level Interface - Skip the matrix data without reading it.
 
 
 !!! note
@@ -1047,11 +1142,11 @@ This will do the same as the three method calls above
 
 * **signature** (`str`): The signature of the new Frame
 * **time** (`float`): The time of the new frame
-* **streamID** (`int`): The ID of the stream
+* **streamID** (`int`): The ID of the stream (*default*: `0`)
 
 **Returns**
 
-&nbsp;&nbsp;&nbsp;&nbsp;(`FrameW`) A FrameW, used to write a (see example)
+&nbsp;&nbsp;&nbsp;&nbsp;(`FrameW`) A FrameW, used to write a set of matrices (see example)
 
 ----------
 
@@ -1086,6 +1181,7 @@ in the frame and writes it to disk, all at once
 * **matrix_sig** (`str`): The matrix signature
 * **matrixdata** (`numpy.array`): The data of the matrix, a 2D array
 * **streamID** (`int`): The ID of the stream to add this frame/matrix to
+    (*default*: `0`)
 
 ----------
 
@@ -1164,7 +1260,7 @@ SdifFile.print_NVT(self)
 ```
 
 
-**Low-Level Interface**
+Low-Level Interface - Print the name value table
 
 ----------
 
@@ -1178,7 +1274,7 @@ SdifFile.print_all_ascii_chunks(self)
 ```
 
 
-**Low-Level Interface**
+Low-Level Interface - print all text chunks
 
 ----------
 
@@ -1192,7 +1288,7 @@ SdifFile.print_all_stream_ID(self)
 ```
 
 
-**Low-Level Interface**
+Low-Level Interface - Print the ID of all streams
 
 ----------
 
@@ -1206,7 +1302,7 @@ SdifFile.print_all_types(self)
 ```
 
 
-**Low-Level Interface**
+Low-Level Interface - Print all types defined in this sdif file
 
 ----------
 
@@ -1220,7 +1316,7 @@ SdifFile.print_frame_header(self)
 ```
 
 
-**Low-Level Interface**
+Low-Level Interface- Print the frame header
 
 ----------
 
@@ -1234,7 +1330,7 @@ SdifFile.print_general_header(self)
 ```
 
 
-**Low-Level Interface**
+Low-Level Interface - Print the general header
 
 ----------
 
@@ -1248,7 +1344,7 @@ SdifFile.print_matrix_header(self)
 ```
 
 
-**Low-Level Interface**
+Low-Level Interface - Print the matrix header
 
 ----------
 
@@ -1262,7 +1358,7 @@ SdifFile.print_one_row(self)
 ```
 
 
-**Low-Level Interface**
+Low-Level Interface - print one row of the current matrix
 
 ----------
 
@@ -1294,7 +1390,13 @@ SdifFile.status(self)
 ```
 
 
-Returns a tuple (curr_frame_status, curr_matrix_index, curr_matrix_status)
+The status of this sdiffile
+
+
+
+**Returns**
+
+&nbsp;&nbsp;&nbsp;&nbsp;(`tuple[int, int, int]`) A tuple (curr_frame_status, curr_matrix_index, curr_matrix_status)
 
 ----------
 

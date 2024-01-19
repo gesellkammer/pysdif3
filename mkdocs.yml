@@ -9,6 +9,7 @@ nav:
     - index.md
     - reference.md
     - tools.md
+    - sdifinfo.md
     - classes:
         - classes/SdifFile.md
         - classes/FrameR.md
